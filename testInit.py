@@ -1,4 +1,6 @@
 from Laboratory import *
+from Customer import *
+import csv
 
 
 def lab_ini():
@@ -39,5 +41,29 @@ def lab_ini():
     return lab1
 
 
+def department_import(file, customer):
+    with open(file, encoding='utf-8') as r_file:
+        file_reader = csv.reader(r_file, delimiter=";")
+        count = 0
+        count_departments = -1
+        for row in file_reader:
+            if row[1] == "":
+                customer.add_department(row[0])
+                count_departments += 1
+            else:
+                customer.departments[count_departments].add_working_area(row[0], row[1])
+            count += 1
+        print(f'Всего в файле {count} строк.')
+        print(f'В организации {count_departments} отделов.')
+
+
 def customer_ini():
-    d = 10
+    name = "Общество с ограниченной ответственностью «Ромашка» (ООО «Ромашка»)"
+    legal_address = "236022, Калининградская обл., г. Калининград, пр-т. Гвардейский, д. 15"
+    actual_address = "236022, Калининградская обл., г. Калининград, пр-т. Гвардейский, д. 15"
+    contract_number = "303522-VI"
+    contract_date = "15.11.2021"
+    customer1 = Customer(name, legal_address, actual_address, contract_number, contract_date)
+    file = "Romashka.csv"
+    department_import(file, customer1)
+    return customer1
