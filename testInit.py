@@ -1,3 +1,5 @@
+import random
+
 from Laboratory import *
 from Customer import *
 import csv
@@ -57,6 +59,24 @@ def department_import(file, customer):
         print(f'В организации {count_departments} отделов.')
 
 
+def measure_ini(departments):
+    for department in departments:
+        for area in department.working_areas:
+            noise_source = "Производственное оборудование"
+            nature_of_noise = "Непостоянный широкополосный"
+            sound_lvl = random.randint(70, 90)
+            max_sound_lvl = random.randint(sound_lvl, sound_lvl + 10)
+            eq_sound_lvl = "-"
+            area.noise_parameter_ini(noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl)
+            temperature = random.randint(210, 230)/10
+            atmo_pressure = random.randint(745, 749)
+            humidity = random.randint(40, 55)
+            area.weather_condition_ini(temperature, atmo_pressure, humidity)
+            # print(f'Уровень звука: {sound_lvl}; Максимальный уровень звука: {max_sound_lvl};')
+            # print(f'Температура воздуха: {temperature}; Атмосферное давление: {atmo_pressure}; '
+            #       f'Относительная влажность: {humidity}')
+
+
 def customer_ini():
     name = "Общество с ограниченной ответственностью «Ромашка» (ООО «Ромашка»)"
     legal_address = "236022, Калининградская обл., г. Калининград, пр-т. Гвардейский, д. 15"
@@ -66,4 +86,5 @@ def customer_ini():
     customer1 = Customer(name, legal_address, actual_address, contract_number, contract_date)
     file = "Romashka.csv"
     department_import(file, customer1)
+    measure_ini(customer1.departments)
     return customer1
