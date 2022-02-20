@@ -29,10 +29,10 @@ class Laboratory:
             self.verification_certificates = []
 
         def get_measuring(self):
-            meas_cert = ""
-            for i in self.verification_certificates:
-                meas_cert += i.get_verification()
-            return self.factory_number + " " + self.name + " " + self.accurate + "\n" + meas_cert
+            last_cert = len(self.verification_certificates) - 1
+            return [self.name, self.factory_number, self.verification_certificates[last_cert].number,
+                    self.verification_certificates[last_cert].date_start,
+                    self.verification_certificates[last_cert].date_off, self.accurate]
 
         class VerificationCertificate:
             def __init__(self, number, date_start, date_off):
@@ -41,7 +41,7 @@ class Laboratory:
                 self.number = number
 
             def get_verification(self):
-                return self.number + " " + self.date_start + " " + self.date_off
+                return [self.number, self.date_start, self.date_off]
 
         def add_verification_certificate(self, number, date_start, date_off):
             new_certificate = self.VerificationCertificate(number, date_start, date_off)
@@ -79,24 +79,24 @@ class Laboratory:
         else:
             self.methodologies.append(new_methodology)
 
-    def get_all(self):
-        lab_string = "Название ООО: " + self.name + "\n" + "Название лаборатории: " + self.name_lab + "\n" + \
-                     "Директор: " + self.director + "\n " + "Адрес: " + self.address + "\n" + \
-                     "Уникальный номер записи об аккредитации в реестре аккредитованных лиц: " + \
-                     self.certificate_number + "\nТелефон: " + self.phone + "\nE-mail: " + self.e_mail + "\n"
-        lab_exp = ""
-        for i in self.experts:
-            lab_exp += i.get_expert() + "\n"
-
-        lab_meas = ""
-        for i in self.measuring:
-            lab_meas += i.get_measuring() + "\n"
-
-        lab_meth = ""
-        for i in self.methodologies:
-            lab_meth += i.get_meth() + "\n"
-
-        return lab_string + lab_exp + lab_meas + lab_meth
+    # def get_all(self):
+    #     lab_string = "Название ООО: " + self.name + "\n" + "Название лаборатории: " + self.name_lab + "\n" + \
+    #                  "Директор: " + self.director + "\n " + "Адрес: " + self.address + "\n" + \
+    #                  "Уникальный номер записи об аккредитации в реестре аккредитованных лиц: " + \
+    #                  self.certificate_number + "\nТелефон: " + self.phone + "\nE-mail: " + self.e_mail + "\n"
+    #     lab_exp = ""
+    #     for i in self.experts:
+    #         lab_exp += i.get_expert() + "\n"
+    #
+    #     lab_meas = ""
+    #     for i in self.measuring:
+    #         lab_meas += i.get_measuring() + "\n"
+    #
+    #     lab_meth = ""
+    #     for i in self.methodologies:
+    #         lab_meth += i.get_meth() + "\n"
+    #
+    #     return lab_string + lab_exp + lab_meas + lab_meth
 
     def get_head(self):
         head_string = f"{self.name}\n{self.name_lab}\n{self.address}\n{self.phone}; {self.e_mail}\nУникальный номер " \
@@ -107,3 +107,7 @@ class Laboratory:
         signature_string = f"УТВЕРЖДАЮ\nРуководитель испытательной лаборатории\n__________________{self.director}\n" \
                            f"{date}"
         return signature_string
+
+    def get_measure(self, number_measure):
+        return self.measuring[number_measure].get_measuring()
+
