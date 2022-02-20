@@ -97,3 +97,13 @@ class Laboratory:
             lab_meth += i.get_meth() + "\n"
 
         return lab_string + lab_exp + lab_meas + lab_meth
+
+    def get_head(self):
+        head_string = f"{self.name}\n{self.name_lab}\n{self.address}\n{self.phone}; {self.e_mail}\nУникальный номер " \
+                      f"записи об аккредитации в реестре аккредитованных лиц: {self.certificate_number}"
+        return head_string
+
+    def get_signature(self, date):
+        signature_string = f"УТВЕРЖДАЮ\nРуководитель испытательной лаборатории\n__________________{self.director}\n" \
+                           f"{date}"
+        return signature_string

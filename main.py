@@ -6,5 +6,5 @@ customer = customer_ini()
 print(customer.get_hazard_wp())
 print(lab.get_all())
 
-generate_protocol()
+generate_protocol(lab, customer, "20 февраля 2022 г.", "14.02.2022 г.")
 
