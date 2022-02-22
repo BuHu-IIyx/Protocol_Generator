@@ -56,7 +56,7 @@ class Laboratory:
             self.application = application
 
         def get_meth(self):
-            return self.application + " " + self.name
+            return [self.application, self.name]
 
     def add_expert(self, name, position, certificate_number):
         new_expert = self.Experts(name, position, certificate_number)
@@ -111,3 +111,11 @@ class Laboratory:
     def get_measure(self, number_measure):
         return self.measuring[number_measure].get_measuring()
 
+    def get_methodology(self, number_methodology):
+        return self.methodologies[number_methodology].get_meth()
+
+    def fill_signature(self, table, person):
+        table.cell(0, 0).text = self.experts[person].position
+        table.cell(1, 0).text = "(должность)"
+        table.cell(0, 2).text = self.experts[person].name
+        table.cell(1, 2).text = "(Ф.И.О.)"

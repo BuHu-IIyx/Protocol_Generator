@@ -42,6 +42,15 @@ class Customer:
             def weather_condition_ini(self, temperature, atmo_pressure, humidity):
                 self.weather_conditions = self.WeatherCondition(temperature, atmo_pressure, humidity)
 
+            def get_noise_parameter(self):
+                return [self.number, self.name, self.noise_params.noise_source, self.noise_params.nature_of_noise,
+                        self.noise_params.sound_lvl, 80, self.noise_params.max_sound_lvl, 110,
+                        self.noise_params.eq_sound_lvl, 80]
+
+            def get_weather_condition(self):
+                return [self.number, self.name, self.weather_conditions.temperature,
+                        self.weather_conditions.atmo_pressure, self.weather_conditions.humidity]
+
         def add_working_area(self, number, name):
             new_working_area = self.WorkingArea(number, name)
             if len(self.working_areas) == 0:
@@ -99,3 +108,24 @@ class Customer:
         p10 = "10. Ссылка на план и методы отбора проб, используемые лабораторией или другими органами, если они " \
               "имеют отношение к достоверности и применению результатов: в соответствии с журналом измерений.\n"
         return p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10
+
+    def fill_weather_table(self, table):
+        for dept in self.departments:
+            cells = table.add_row().cells
+            cells[0].merge(cells[4]).text = dept.name
+            for area in dept.working_areas:
+                area_cells = table.add_row().cells
+                for i, item in enumerate(area.get_weather_condition()):
+                    area_cells[i].text = str(item)
+        return 0
+
+    def fill_noise_table(self, table):
+        for dept in self.departments:
+            cells = table.add_row().cells
+            cells[0].merge(cells[4]).text = dept.name
+            for area in dept.working_areas:
+                area_cells = table.add_row().cells
+                for i, item in enumerate(area.get_noise_parameter()):
+                    area_cells[i].text = str(item)
+        return 0
+
