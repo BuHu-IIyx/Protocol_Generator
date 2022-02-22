@@ -90,6 +90,34 @@ class Customer:
     def get_number_protocol(self):
         return f"ПРОТОКОЛ № {self.contract_number}/Ш\nпроведения исследований, испытаний (измерений) шума"
 
+    def fill_text(self, date_izm, paragraph):
+        paragraph.add_run("1. Наименование организации (заказчика): ").bold = True
+        paragraph.add_run(f"{self.name}.\n")
+        paragraph.add_run("2. Контактные данные заказчика (юридический адрес, фактический адрес места осуществления"
+                          " деятельности): ").bold = True
+        paragraph.add_run(f"{self.legal_address}.\n")
+        paragraph.add_run("3. Место проведения испытаний (измерений): ").bold = True
+        paragraph.add_run(f"{self.actual_address}.\n")
+        paragraph.add_run("4. Дата осуществления лабораторной деятельности: ").bold = True
+        paragraph.add_run(f"{date_izm}.\n")
+        paragraph.add_run("5. Цель проведения измерений: ").bold = True
+        paragraph.add_run("производственный контроль за соблюдением санитарно-эпидемиологических "
+                          "требований и выполнением санитарно-противоэпидемических (профилактических) мероприятий.\n")
+        paragraph.add_run("6. Описание и однозначная идентификация объекта (объектов) испытаний, состояние объекта "
+                          "испытаний (при необходимости): ").bold = True
+        paragraph.add_run("рабочие места на территории заказчика в соответствии с заявкой проведение "
+                          "производственного контроля.\n")
+        paragraph.add_run("7. Дата получения образца для испытаний: ").bold = True
+        paragraph.add_run(f"в соответствии с заявкой на проведение измерений № {self.contract_number} от "
+                          f"{self.contract_date}.\n")
+        paragraph.add_run("8. Дата отбора образца: ").bold = True
+        paragraph.add_run("отбор образцов не предусмотрен методикой измерений.\n")
+        paragraph.add_run("9. Место отбора образцов: ").bold = True
+        paragraph.add_run("отбор образцов не предусмотрен методикой измерений.\n")
+        paragraph.add_run("10. Ссылка на план и методы отбора проб, используемые лабораторией или другими органами,"
+                          " если они имеют отношение к достоверности и применению результатов: ").bold = True
+        paragraph.add_run("в соответствии с журналом измерений.\n")
+
     def get_text(self, date_izm):
         p1 = f"1. Наименование организации (заказчика): {self.name}.\n"
         p2 = f"2. Контактные данные заказчика (юридический адрес, фактический адрес места осуществления деятельности):" \
@@ -122,7 +150,7 @@ class Customer:
     def fill_noise_table(self, table):
         for dept in self.departments:
             cells = table.add_row().cells
-            cells[0].merge(cells[4]).text = dept.name
+            cells[0].merge(cells[9]).text = dept.name
             for area in dept.working_areas:
                 area_cells = table.add_row().cells
                 for i, item in enumerate(area.get_noise_parameter()):

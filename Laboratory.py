@@ -1,3 +1,10 @@
+from docx.oxml.ns import nsdecls
+from docx.oxml import parse_xml
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.shared import Mm, Cm, Pt
+
+
 class Laboratory:
     def __init__(self, name, name_lab, logo, director, address, certificate_number, phone, e_mail):
         self.name = name
@@ -100,7 +107,7 @@ class Laboratory:
 
     def get_head(self):
         head_string = f"{self.name}\n{self.name_lab}\n{self.address}\n{self.phone}; {self.e_mail}\nУникальный номер " \
-                      f"записи об аккредитации в реестре аккредитованных лиц: {self.certificate_number}"
+                      f"записи об аккредитации в реестре аккредитованных лиц: {self.certificate_number}\n"
         return head_string
 
     def get_signature(self, date):
@@ -119,3 +126,28 @@ class Laboratory:
         table.cell(1, 0).text = "(должность)"
         table.cell(0, 2).text = self.experts[person].name
         table.cell(1, 2).text = "(Ф.И.О.)"
+
+    def fill_measure(self, measure_list, doc):
+        doc.add_paragraph().add_run("11. Сведения о средствах измерения:").bold = True
+        table = doc.add_table(rows=2, cols=6)
+        table.style = 'Table Grid'
+        table.cell(0, 0).merge(table.cell(1, 0)).paragraphs[0].add_run("Наименование средства измерения").font.size = Pt(9)
+        table.cell(0, 1).merge(table.cell(1, 1)).paragraphs[0].add_run("Заводской номер").font.size = Pt(9)
+        table.cell(0, 2).merge(table.cell(0, 4)).paragraphs[0].add_run("Свидетельство о государственной поверке").font.size = Pt(9)
+        table.cell(1, 2).paragraphs[0].add_run("Номер").font.size = Pt(9)
+        table.cell(1, 3).paragraphs[0].add_run("Выдано").font.size = Pt(9)
+        table.cell(1, 4).paragraphs[0].add_run("Действительно до").font.size = Pt(9)
+        table.cell(0, 5).merge(table.cell(1, 5)).paragraphs[0].add_run("Погрешность измерения").font.size = Pt(9)
+        for i in range(0, 2):
+            for j in range(0, 6):
+                cell = table.cell(i, j)
+                cell.paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+                shading_elm = parse_xml(r'<w:shd {} w:fill="DEEAF6"/>'.format(nsdecls('w')))
+                cell._tc.get_or_add_tcPr().append(shading_elm)
+
+        for i in measure_list:
+            cells = table.add_row().cells
+            for j, item in enumerate(self.get_measure(i)):
+                cells[j].paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+                cells[j].paragraphs[0].add_run(str(item)).font.size = Pt(9)
+        return 0
