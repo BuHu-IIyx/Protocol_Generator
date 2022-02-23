@@ -6,6 +6,7 @@ import csv
 
 
 def lab_ini():
+    short_name = "ЭКСПЕРТЭГИДА"
     name = "Общество с ограниченной ответственностью «ЦЕНТР ОХРАНЫ ТРУДА И ЭКОЛОГИИ «ЭКСПЕРТЭГИДА»\n" \
            "(ООО «ЭКСПЕРТЭГИДА»)"
     name_lab = "Испытательная лаборатория ООО «ЦЕНТР ОХРАНЫ ТРУДА И ЭКОЛОГИИ «ЭКСПЕРТЭГИДА»"
@@ -17,7 +18,7 @@ def lab_ini():
     phone = "8 (863) 303-64-39"
     e_mail = "info@expertegida.ru"
 
-    lab1 = Laboratory(name, name_lab, logo, director, address, certificate_number, phone, e_mail)
+    lab1 = Laboratory(short_name, name, name_lab, logo, director, address, certificate_number, phone, e_mail)
     lab1.add_expert("Д.А. Шебаршов", "Инженер по специальной оценке условий труда", "0000")
     lab1.add_expert("К.С. Казакова", "Инженер по специальной оценке условий труда", "0001")
     lab1.add_measuring("202515", "Анализатор шума и вибрации АССИСТЕНТ", "±0,3 дБ")
@@ -79,12 +80,13 @@ def measure_ini(departments):
 
 
 def customer_ini():
+    short_name = "ООО «Ромашка»"
     name = "Общество с ограниченной ответственностью «Ромашка» (ООО «Ромашка»)"
     legal_address = "236022, Калининградская обл., г. Калининград, пр-т. Гвардейский, д. 15"
     actual_address = "236022, Калининградская обл., г. Калининград, пр-т. Гвардейский, д. 15"
     contract_number = "303522-VI"
     contract_date = "15.11.2021"
-    customer1 = Customer(name, legal_address, actual_address, contract_number, contract_date)
+    customer1 = Customer(short_name, name, legal_address, actual_address, contract_number, contract_date)
     file = "Romashka.csv"
     department_import(file, customer1)
     measure_ini(customer1.departments)

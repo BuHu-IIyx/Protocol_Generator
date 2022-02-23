@@ -7,8 +7,9 @@ from docx.oxml.shared import OxmlElement, qn
 
 
 class Laboratory:
-    def __init__(self, name, name_lab, logo, director, address, certificate_number, phone, e_mail):
+    def __init__(self, short_name, name, name_lab, logo, director, address, certificate_number, phone, e_mail):
         self.name = name
+        self.short_name = short_name
         self.name_lab = name_lab
         self.logo = logo
         self.director = director

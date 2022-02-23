@@ -4,7 +4,8 @@ from docx.shared import Mm, Cm, Pt
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 
 class Customer:
-    def __init__(self, name, legal_address, actual_address, contract_number, contract_date):
+    def __init__(self, short_name, name, legal_address, actual_address, contract_number, contract_date):
+        self.short_name = short_name
         self.contract_date = contract_date
         self.contract_number = contract_number
         self.actual_address = actual_address
