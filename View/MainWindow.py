@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkcalendar import Calendar, DateEntry
 
-from Controller.MainController import get_labs_list, get_customer_list, get_factors_list, generate_protocol
+from Controller.MainController import get_labs_list, get_customer_list, get_factors_list, generate_protocol, \
+    get_measure_list, get_methodologies_list, get_experts_list
 
 
 class MainWindow(tk.Frame):
@@ -113,10 +114,10 @@ class MainWindow(tk.Frame):
 class GenerateProtocolWindow(tk.Toplevel):
     def __init__(self, lab, cust, fact):
         super().__init__()
-        self.init_window()
         self.lab = lab
         self.cust = cust
         self.fact = fact
+        self.init_window()
 
     def create_button_click(self):
         zamer = self.combo_zam.get()
@@ -136,19 +137,19 @@ class GenerateProtocolWindow(tk.Toplevel):
         self.focus_set()
 
         tk.Label(self, text="Выберите замерщика:", bd=5).grid(column=0, row=1)
-        self.combo_zam = ttk.Combobox(self, values=['experts', 'sdsd'])
+        self.combo_zam = ttk.Combobox(self, values=get_experts_list())
         self.combo_zam.grid(column=1, row=1)
 
         tk.Label(self, text="Выберите оформителя:", bd=5).grid(column=0, row=2)
-        self.combo_oformit = ttk.Combobox(self, values=['experts', 'sdsd'])
+        self.combo_oformit = ttk.Combobox(self, values=get_experts_list())
         self.combo_oformit.grid(column=1, row=2)
 
         tk.Label(self, text="Выберите приборы:", bd=5).grid(column=0, row=3)
-        self.combo_measuring = ttk.Combobox(self, values=['measuring', 'dfdf'])
+        self.combo_measuring = ttk.Combobox(self, values=get_measure_list(self.fact))
         self.combo_measuring.grid(column=1, row=3)
 
         tk.Label(self, text="Выберите методики:", bd=5).grid(column=0, row=4)
-        self.combo_methodologies = ttk.Combobox(self, values=['methodologies', 'dfdfdfg'])
+        self.combo_methodologies = ttk.Combobox(self, values=get_methodologies_list(self.fact))
         self.combo_methodologies.grid(column=1, row=4)
 
         tk.Label(self, text="Дата протокола:", bd=5).grid(column=0, row=5)

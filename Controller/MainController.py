@@ -20,5 +20,28 @@ def get_factors_list(customer):
         return ['Вибрация общая', 'Шум']
 
 
+def get_measure_list(factor):
+    if factor == 'Шум':
+        return ['Ассистент', 'Экофизика', 'Калибратор']
+    elif factor == 'Вибрация локальная':
+        return ['Ассистент', 'Экофизика', 'Виброкалибратор']
+    elif factor == 'Вибрация общая':
+        return ['Ассистент', 'Экофизика', 'Виброкалибратор']
+
+
+def get_experts_list():
+    return ['Вася', 'Петя', 'Маша', 'Саша']
+
+
+def get_methodologies_list(factor):
+    if factor == 'Шум':
+        return ['1234214', '421412', '421412']
+    elif factor == 'Вибрация локальная':
+        return ['1111', '2222', '3333']
+    elif factor == 'Вибрация общая':
+        return ['444', '4444', '5555']
+
+
 def generate_protocol(lab, cust, fact, zamer, oformitel, measure, methodologies, date, date_izm):
     print(date, date_izm)
+
