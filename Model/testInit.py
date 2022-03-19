@@ -1,7 +1,7 @@
 import random
 
-from Laboratory import *
-from Customer import *
+from Model.Laboratory import *
+from Model.Customer import *
 import csv
 
 

@@ -1,5 +1,3 @@
-from Laboratory import *
-from Customer import *
 
 
 class Company:

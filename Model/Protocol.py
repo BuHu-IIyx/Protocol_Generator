@@ -1,15 +1,9 @@
+from docx.enum.section import WD_ORIENTATION
 from docx import Document
-from docx.shared import Mm, Cm, Pt
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-from docx.oxml.shared import OxmlElement, qn
-from docx.enum.section import WD_ORIENTATION, WD_SECTION_START
-from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
-from docx import Document
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-from docx.oxml import OxmlElement, ns
+from docx.oxml import ns
 
-from Laboratory import *
-from Customer import *
+from Model.Laboratory import *
+from Model.Customer import *
 
 
 def generate_protocol(lab, customer, date_off, date_izm):
