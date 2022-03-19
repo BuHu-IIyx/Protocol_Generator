@@ -18,3 +18,7 @@ def get_factors_list(customer):
         return ['Шум', 'Вибрация общая']
     else:
         return ['Вибрация общая', 'Шум']
+
+
+def generate_protocol(lab, cust, fact, zamer, oformitel, measure, methodologies, date, date_izm):
+    print(date, date_izm)

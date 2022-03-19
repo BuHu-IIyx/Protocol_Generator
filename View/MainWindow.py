@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
+from tkcalendar import Calendar, DateEntry
 
-from Controller.MainController import get_labs_list, get_customer_list, get_factors_list
+from Controller.MainController import get_labs_list, get_customer_list, get_factors_list, generate_protocol
 
 
 class MainWindow(tk.Frame):
@@ -24,6 +25,12 @@ class MainWindow(tk.Frame):
 
     def show_button_click(self):
         self.generate_tree(self.combo_factor.get())
+
+    def create_button_click(self):
+        lab = self.combo_labs.get()
+        cust = self.combo_cust.get()
+        fact = self.combo_factor.get()
+        GenerateProtocolWindow(lab, cust, fact)
 
     def generate_tree(self, factor):
         if factor == 'Шум':
@@ -94,9 +101,66 @@ class MainWindow(tk.Frame):
                                       command=self.show_button_click)
         self.show_button.grid(column=2, row=1)
 
-        self.create_button = ttk.Button(self.toolbar, text='Создать протокол', state='disable', width=20)
+        self.create_button = ttk.Button(self.toolbar, text='Создать протокол', width=20,
+                                        command=self.create_button_click)
         self.create_button.grid(column=2, row=2)
 
         tk.Label(self.toolbar, text="").grid(column=0, row=3)
 
-        self.tree = ttk.Treeview(self.toolbar, height=15, show='headings')
+        self.tree = ttk.Treeview(self.toolbar, height=30, show='headings')
+
+
+class GenerateProtocolWindow(tk.Toplevel):
+    def __init__(self, lab, cust, fact):
+        super().__init__()
+        self.init_window()
+        self.lab = lab
+        self.cust = cust
+        self.fact = fact
+
+    def create_button_click(self):
+        zamer = self.combo_zam.get()
+        oformitel = self.combo_oformit.get()
+        measure = self.combo_measuring.get()
+        methodologies = self.combo_methodologies.get()
+        date = self.date.get_date()
+        date_izm = self.date_zamer.get_date()
+        generate_protocol(self.lab, self.cust, self.fact, zamer, oformitel, measure, methodologies, date, date_izm)
+
+    def init_window(self):
+        self.title('Создание протокола')
+        self.geometry('300x200+400+300')
+        self.resizable(False, False)
+
+        self.grab_set()
+        self.focus_set()
+
+        tk.Label(self, text="Выберите замерщика:", bd=5).grid(column=0, row=1)
+        self.combo_zam = ttk.Combobox(self, values=['experts', 'sdsd'])
+        self.combo_zam.grid(column=1, row=1)
+
+        tk.Label(self, text="Выберите оформителя:", bd=5).grid(column=0, row=2)
+        self.combo_oformit = ttk.Combobox(self, values=['experts', 'sdsd'])
+        self.combo_oformit.grid(column=1, row=2)
+
+        tk.Label(self, text="Выберите приборы:", bd=5).grid(column=0, row=3)
+        self.combo_measuring = ttk.Combobox(self, values=['measuring', 'dfdf'])
+        self.combo_measuring.grid(column=1, row=3)
+
+        tk.Label(self, text="Выберите методики:", bd=5).grid(column=0, row=4)
+        self.combo_methodologies = ttk.Combobox(self, values=['methodologies', 'dfdfdfg'])
+        self.combo_methodologies.grid(column=1, row=4)
+
+        tk.Label(self, text="Дата протокола:", bd=5).grid(column=0, row=5)
+        self.date = DateEntry(self, width=20, foreground="white", bd=2)
+        self.date.grid(column=1, row=5)
+
+        tk.Label(self, text="Дата замера:", bd=5).grid(column=0, row=6)
+        self.date_zamer = DateEntry(self, width=20, foreground="white", bd=2)
+        self.date_zamer.grid(column=1, row=6)
+
+        self.exit_button = ttk.Button(self, text='Отмена', width=20, command=self.destroy)
+        self.exit_button.grid(column=0, row=7)
+
+        self.create_button = ttk.Button(self, text='Создать', width=20, command=self.create_button_click)
+        self.create_button.grid(column=1, row=7)
