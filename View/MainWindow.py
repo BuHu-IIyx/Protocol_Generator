@@ -102,7 +102,7 @@ class MainWindow(tk.Frame):
                                       command=self.show_button_click)
         self.show_button.grid(column=2, row=1)
 
-        self.create_button = ttk.Button(self.toolbar, text='Создать протокол', width=20,
+        self.create_button = ttk.Button(self.toolbar, text='Создать протокол', state='disable', width=20,
                                         command=self.create_button_click)
         self.create_button.grid(column=2, row=2)
 
