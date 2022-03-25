@@ -1,6 +1,7 @@
 import psycopg2
 import csv
 
+
 class ConnectionDB:
     def __init__(self):
         self.conn = psycopg2.connect("dbname=LabDB user=postgres host=localhost password=452204 port=5432")
@@ -80,7 +81,7 @@ class ConnectionDB:
                             'FROM department_working_area INNER JOIN customers_departments '
                             'ON department_working_area.department_id = customers_departments.department_id	'
                             'WHERE customers_departments.customer_id=%s AND department_working_area.is_noise=true',
-                            (customer_id, ))
+                            (customer_id,))
         workplaces = self.cursor.fetchall()
         return workplaces
 
@@ -98,7 +99,8 @@ class ConnectionDB:
                         department_id = self.get_department_id(customer_id, row[0])
                         count_departments += 1
                     else:
-                        self.add_working_area(row[1], department_id, row[2], row[3], row[4], row[5], row[6], row[7], row[8],
+                        self.add_working_area(row[1], department_id, row[2], row[3], row[4], row[5], row[6], row[7],
+                                              row[8],
                                               row[9], row[10], row[11])
                 count += 1
 
