@@ -9,15 +9,21 @@ import datetime
 
 def lab_ini():
     ini_db = ConnectionDB()
-    short_name = "ООО «Василек»"
-    name = "Общество с ограниченной ответственностью «Василек» (ООО «Василек»)"
-    legal_address = "124154, г. Санкт-Петербург, пр-т. Невский, д. 1"
-    actual_address = "124154, г. Санкт-Петербург, пр-т. Невский, д. 1"
-    contract_number = "0000004-I"
-    contract_date = "18.12.2020"
+    file = 'Vasilek.csv'
+    ini_db.import_workplaces(file, "ООО «Василек»")
 
-    ini_db.add_customer(short_name, name, legal_address, actual_address, contract_number, contract_date)
+    # file = 'Romashka2.csv'
+    # ini_db.import_csv_customer(file, "ООО «Василек»")
 
+    # short_name = "ООО «Василек»"
+    # name = "Общество с ограниченной ответственностью «Василек» (ООО «Василек»)"
+    # legal_address = "124154, г. Санкт-Петербург, пр-т. Невский, д. 1"
+    # actual_address = "124154, г. Санкт-Петербург, пр-т. Невский, д. 1"
+    # contract_number = "0000004-I"
+    # contract_date = "18.12.2020"
+    #
+    # ini_db.add_customer(short_name, name, legal_address, actual_address, contract_number, contract_date)
+    #
 
 
 
