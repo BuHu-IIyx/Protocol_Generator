@@ -56,11 +56,13 @@ class ConnectionDB:
         self.cursor.execute('INSERT INTO noise_params(working_area_id, noise_source, nature_of_noise, sound_lvl, '
                             'max_sound_lvl, eq_sound_lvl) VALUES (%s, %s, %s, %s, %s, %s)',
                             (working_area_id, noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl))
+        self.conn.commit()
 
     def add_weather_conditions(self, working_area_id, temperature, atmo_pressure, humidity):
         self.cursor.execute('INSERT INTO working_area_weather_condition(working_area_id, temperature, atmo_pressure, '
                             'humidity) VALUES (%s, %s, %s, %s)',
                             (working_area_id, temperature, atmo_pressure, humidity))
+        self.conn.commit()
 
     def get_customer_id(self, short_name):
         self.cursor.execute('SELECT customer_id FROM customer WHERE short_name=%s', (short_name,))
@@ -125,7 +127,7 @@ class ConnectionDB:
             for row in file_reader:
                 if count != 0:
                     self.add_noise_params(row[0], row[3], row[4], row[5], row[6], row[7])
-                    self.add_weather_conditions(row[0], row[8], row[9], row[10])
+                    self.add_weather_conditions(row[0], float(row[8].replace(',', '.')), row[9], row[10])
                 count += 1
 
     def __del__(self):
