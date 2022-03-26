@@ -1,12 +1,12 @@
 from docx.enum.section import WD_ORIENTATION
 from docx import Document
 from docx.oxml import ns
-
 from Model.Laboratory import *
 from Model.Customer import *
 
 
 def generate_protocol(lab, customer, date_off, date_izm):
+    # Create and customization document
     doc = Document()
     current_section = doc.sections[-1]
     new_width, new_height = current_section.page_height, current_section.page_width
@@ -20,6 +20,8 @@ def generate_protocol(lab, customer, date_off, date_izm):
     style = doc.styles['Normal']
     style.font.name = 'Times New Roman'
     style.font.size = Pt(10)
+
+    # Add 1st table in document
     table1 = doc.add_table(rows=1, cols=2)
     table1_cells = table1.rows[0].cells
     table1_cells[0].paragraphs[0].add_run().add_picture('logo.jpg', width=Mm(75))

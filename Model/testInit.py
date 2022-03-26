@@ -1,5 +1,4 @@
 import random
-
 from Model.DB import ConnectionDB
 from Model.Laboratory import *
 from Model.Customer import *
@@ -9,8 +8,12 @@ import datetime
 
 def lab_ini():
     ini_db = ConnectionDB()
-    file = 'Vasilek.csv'
-    ini_db.import_workplaces(file, "ООО «Василек»")
+    lab = ini_db.get_lab_data('ЭКСПЕРТЭГИДА')
+    print(lab.get_signature())
+    # ini_db.export_workplaces("ООО «Василек»", 0)
+    # ini_db.export_workplaces("ООО «Василек»", 1)
+    # file = 'Vasilek.csv'
+    # ini_db.import_workplaces(file, "ООО «Василек»")
 
     # file = 'Romashka2.csv'
     # ini_db.import_csv_customer(file, "ООО «Василек»")
