@@ -8,8 +8,10 @@ import datetime
 
 def lab_ini():
     ini_db = ConnectionDB()
-    lab = ini_db.get_lab_data('ЭКСПЕРТЭГИДА')
-    print(lab.get_signature())
+    lab = ini_db.get_lab('ЭКСПЕРТЭГИДА')
+    customer = ini_db.get_customer("ООО «Василек»")
+    print(customer.get_hazard_wp())
+    print(lab.get_signature('30.11.1988'))
     # ini_db.export_workplaces("ООО «Василек»", 0)
     # ini_db.export_workplaces("ООО «Василек»", 1)
     # file = 'Vasilek.csv'

@@ -1,6 +1,7 @@
 import psycopg2
 import csv
 
+from Model.Customer import Customer
 from Model.Laboratory import Laboratory
 
 
@@ -161,13 +162,46 @@ class ConnectionDB:
                     self.add_weather_conditions(row[0], float(row[3].replace(',', '.')), row[4], row[5])
                 count += 1
 
-    def get_lab_data(self, lab_short_name):
+    def get_lab(self, lab_short_name):
         self.cursor.execute('SELECT laboratory_id, short_name, name, name_laboratory, lab_logo, director, address, '
                             'certificate_number, phone, e_mail FROM laboratory WHERE short_name = %s',
                             (lab_short_name,))
-
-        lab = Laboratory(self.cursor.fetchone())
+        ini_data = self.cursor.fetchone()
+        lab = Laboratory(ini_data[0], ini_data[1], ini_data[2], ini_data[3], ini_data[4], ini_data[5], ini_data[6],
+                         ini_data[7], ini_data[8], ini_data[9])
         return lab
+
+    def get_customer(self, customer_short_name):
+        self.cursor.execute('SELECT customer_id, short_name, name, legal_address, actual_address, contract_number, '
+                            'contract_date FROM customer WHERE short_name = %s',
+                            (customer_short_name,))
+        data = self.cursor.fetchone()
+        customer = Customer(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
+        self.cursor.execute('SELECT department_id, name FROM customers_departments WHERE customer_id = %s',
+                            (customer.customer_id, ))
+        depts = self.cursor.fetchall()
+        for dept in depts:
+            customer.add_department(dept[0], dept[1])
+            n = len(customer.departments) - 1
+            self.cursor.execute('SELECT department_working_area.working_area_id, name, temperature, atmo_pressure, '
+                                'humidity, noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl FROM '
+                                'department_working_area INNER JOIN working_area_weather_condition ON '
+                                'department_working_area.working_area_id = '
+                                'working_area_weather_condition.working_area_id INNER JOIN noise_params ON '
+                                'working_area_weather_condition.working_area_id = noise_params.working_area_id WHERE '
+                                'department_working_area.department_id = %s AND is_noise = true',
+                                (dept[0],))
+            areas = self.cursor.fetchall()
+            for area in areas:
+                weather = dict(temperature=area[2], atmo_pressure=area[3], humidity=area[3])
+                params = dict(noise_source=area[4], nature_of_noise=area[5], sound_lvl=area[6], max_sound_lvl=area[7],
+                              eq_sound_lvl=area[8])
+                if area[6] > 80 or area[7] > 110:
+                    hazard = True
+                else:
+                    hazard = False
+                customer.departments[n].add_working_area(area[0], area[1], hazard, weather, params)
+        return customer
 
     # Close connection
     def __del__(self):

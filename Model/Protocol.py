@@ -45,6 +45,7 @@ def generate_protocol(lab, customer, date_off, date_izm):
     table2.columns[1].width = Mm(70)
     table2_cells[1].width = Mm(70)
     p = doc.add_paragraph()
+
     run = p.add_run(customer.get_number_protocol())
     p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
     run.bold = True
