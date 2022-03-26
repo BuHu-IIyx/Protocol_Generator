@@ -162,13 +162,39 @@ class ConnectionDB:
                     self.add_weather_conditions(row[0], float(row[3].replace(',', '.')), row[4], row[5])
                 count += 1
 
-    def get_lab(self, lab_short_name):
+    def get_lab(self, lab_short_name, experts_ids, zamer_ids, measure_ids, methodology_ids):
         self.cursor.execute('SELECT laboratory_id, short_name, name, name_laboratory, lab_logo, director, address, '
                             'certificate_number, phone, e_mail FROM laboratory WHERE short_name = %s',
                             (lab_short_name,))
         ini_data = self.cursor.fetchone()
         lab = Laboratory(ini_data[0], ini_data[1], ini_data[2], ini_data[3], ini_data[4], ini_data[5], ini_data[6],
                          ini_data[7], ini_data[8], ini_data[9])
+
+        self.cursor.execute('SELECT name, "position", certificate_number FROM experts WHERE expert_id IN %s',
+                            (experts_ids,))
+        exp_data = self.cursor.fetchall()
+        for exp in exp_data:
+            lab.add_expert(exp[0], exp[1], exp[2], 'expert')
+
+        self.cursor.execute('SELECT name, "position", certificate_number FROM experts WHERE expert_id IN %s',
+                            (zamer_ids,))
+        exp_data = self.cursor.fetchall()
+        for exp in exp_data:
+            lab.add_expert(exp[0], exp[1], exp[2], 'zamer')
+
+        self.cursor.execute('SELECT factory_number, measuring_name, accurate FROM measuring WHERE '
+                            'measuring_id IN %s;',
+                            (measure_ids,))
+        measure_data = self.cursor.fetchall()
+        for measure in measure_data:
+            lab.add_measuring(measure[0], measure[1], measure[2])
+
+        self.cursor.execute('SELECT application, name FROM methodology WHERE "ID" IN %s',
+                            (methodology_ids,))
+        meth_data = self.cursor.fetchall()
+        for meth in meth_data:
+            lab.add_methodology(meth[0], meth[1])
+
         return lab
 
     def get_customer(self, customer_short_name):
@@ -193,10 +219,10 @@ class ConnectionDB:
                                 (dept[0],))
             areas = self.cursor.fetchall()
             for area in areas:
-                weather = dict(temperature=area[2], atmo_pressure=area[3], humidity=area[3])
-                params = dict(noise_source=area[4], nature_of_noise=area[5], sound_lvl=area[6], max_sound_lvl=area[7],
-                              eq_sound_lvl=area[8])
-                if area[6] > 80 or area[7] > 110:
+                weather = dict(temperature=area[2], atmo_pressure=area[3], humidity=area[4])
+                params = dict(noise_source=area[5], nature_of_noise=area[6], sound_lvl=area[7], max_sound_lvl=area[8],
+                              eq_sound_lvl=area[9])
+                if int(area[7]) > 80 or int(area[8]) > 110:
                     hazard = True
                 else:
                     hazard = False

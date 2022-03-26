@@ -24,10 +24,11 @@ class Laboratory:
         self.methodologies = []
 
     class Experts:
-        def __init__(self, name, position, certificate_number):
+        def __init__(self, name, position, certificate_number, status):
             self.name = name
             self.position = position
             self.certificate_number = certificate_number
+            self.status = status
 
         def get_expert(self):
             return self.name + " " + self.position + " " + self.certificate_number
@@ -69,8 +70,8 @@ class Laboratory:
         def get_meth(self):
             return [self.application, self.name]
 
-    def add_expert(self, name, position, certificate_number):
-        new_expert = self.Experts(name, position, certificate_number)
+    def add_expert(self, name, position, certificate_number, status):
+        new_expert = self.Experts(name, position, certificate_number, status)
         if len(self.experts) == 0:
             self.experts = [new_expert]
         else:

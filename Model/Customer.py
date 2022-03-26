@@ -82,7 +82,7 @@ class Customer:
             for area in department.working_areas:
                 if area.hazard:
                     count += 1
-                    result += area.number + ". " + area.name + "; "
+                    result += str(area.number) + ". " + area.name + "; "
         if count == 1:
             return f"по результатам измерений установлено: параметры шума на рабочем месте {result}не соответствуют " \
                    f"требованиям СанПиН 1.2.3685-21 «Гигиенические нормативы и требования к обеспечению безопасности " \
