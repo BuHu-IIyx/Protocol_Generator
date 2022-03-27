@@ -5,7 +5,7 @@ from Model.Laboratory import *
 from Model.Customer import *
 
 
-def generate_protocol(lab, customer, date_off, date_izm):
+def generate_protocol_func(lab, customer, date_off, date_izm):
     # Create and customization document
     doc = Document()
     current_section = doc.sections[-1]
@@ -52,9 +52,9 @@ def generate_protocol(lab, customer, date_off, date_izm):
     p = doc.add_paragraph()
     customer.fill_text(date_izm, p)
     doc.add_page_break()
-    lab.fill_measure([0, 1, 2], doc)
+    lab.fill_measure(doc)
     doc.add_paragraph()
-    lab.fill_methodology([0, 1], doc)
+    lab.fill_methodology(doc)
     doc.add_paragraph()
     customer.fill_weather_table(doc)
     doc.add_paragraph().add_run("14.  Результаты проверки работоспособности: уровни звукового давления на частотах "
@@ -95,7 +95,7 @@ def generate_protocol(lab, customer, date_off, date_izm):
     run.italic = True
     run.font.size = Pt(8)
     add_page_number(table0.cell(0, 1).paragraphs[0])
-    doc.save('testDB.docx')
+    doc.save('testInterface.docx')
 
 
 def create_element(name):

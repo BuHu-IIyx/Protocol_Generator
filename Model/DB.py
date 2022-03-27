@@ -92,6 +92,12 @@ class ConnectionDB:
         department_id = self.cursor.fetchone()
         return department_id[0]
 
+    # Get factor ID from DB on name
+    def get_factor_id(self, factor):
+        self.cursor.execute('SELECT factor_id FROM factor_dic WHERE factor = %s', (factor,))
+        factor_id = self.cursor.fetchone()
+        return factor_id[0]
+
     # Get all workplaces in customers departments
     def get_workplaces_in_customer(self, customer_id):
         self.cursor.execute('SELECT working_area_id, customers_departments.name, department_working_area.name '
@@ -163,7 +169,8 @@ class ConnectionDB:
                 count += 1
 
     # Laboratory fabric
-    def get_lab(self, lab_short_name, experts_ids, zamer_ids, measure_ids, methodology_ids):
+    def get_lab(self, lab_short_name, experts_ids, zamer_ids, measure_ids, methodology_ids, fact):
+        factor_id = self.get_factor_id(fact)
         self.cursor.execute('SELECT laboratory_id, short_name, name, name_laboratory, lab_logo, director, address, '
                             'certificate_number, phone, e_mail FROM laboratory WHERE short_name = %s',
                             (lab_short_name,))
@@ -171,13 +178,13 @@ class ConnectionDB:
         lab = Laboratory(ini_data[0], ini_data[1], ini_data[2], ini_data[3], ini_data[4], ini_data[5], ini_data[6],
                          ini_data[7], ini_data[8], ini_data[9])
 
-        self.cursor.execute('SELECT name, "position", certificate_number FROM experts WHERE expert_id IN %s',
+        self.cursor.execute('SELECT name, "position", certificate_number FROM experts WHERE certificate_number IN %s',
                             (experts_ids,))
         exp_data = self.cursor.fetchall()
         for exp in exp_data:
             lab.add_expert(exp[0], exp[1], exp[2], 'expert')
 
-        self.cursor.execute('SELECT name, "position", certificate_number FROM experts WHERE expert_id IN %s',
+        self.cursor.execute('SELECT name, "position", certificate_number FROM experts WHERE certificate_number IN %s',
                             (zamer_ids,))
         exp_data = self.cursor.fetchall()
         for exp in exp_data:
@@ -186,8 +193,9 @@ class ConnectionDB:
         self.cursor.execute('SELECT factory_number, measuring_name, accurate, "number", date_start, '
                             'date_off FROM measuring INNER JOIN (SELECT DISTINCT ON (1) measure_id AS measure, '
                             '"number", date_start, date_off FROM verification_certificate ORDER BY 1, date_off desc) '
-                            'AS cert ON measuring.measuring_id = measure WHERE measuring.measuring_id IN %s',
-                            (measure_ids,))
+                            'AS cert ON measuring.measuring_id = measure WHERE measuring.factory_number IN %s AND '
+                            'factor_id = %s',
+                            (measure_ids, factor_id))
         measure_data = self.cursor.fetchall()
         for measure in measure_data:
             cert = dict(number=measure[3], date_start=measure[4], date_off=measure[5])
@@ -284,6 +292,37 @@ class ConnectionDB:
         for i in range(0, 14):
             if customer_fact[i]:
                 result.append(all_fact.get(i+1))
+        return result
+
+    # Get measure from DB on factor
+    def get_measure_factor(self, factor):
+        factor_id = self.get_factor_id(factor)
+        self.cursor.execute('''SELECT factory_number || ': ' || measuring_name	FROM measuring WHERE factor_id = %s 
+        ORDER BY measuring_name''', (factor_id,))
+        measure = self.cursor.fetchall()
+        result = []
+        for m in measure:
+            result.append(m[0])
+        return result
+
+    # Get methodologies from DB on factor
+    def get_methodologies_factor(self, factor):
+        factor_id = self.get_factor_id(factor)
+        self.cursor.execute('''SELECT "ID" || ': ' || application || ' - ' || name	FROM methodology WHERE factor_id 
+        IN (0, %s) ORDER BY application, factor_id''', (factor_id,))
+        method = self.cursor.fetchall()
+        result = []
+        for m in method:
+            result.append(m[0])
+        return result
+
+    # Get experts from DB
+    def get_experts_list(self):
+        self.cursor.execute('''SELECT certificate_number || ': ' || name FROM experts''')
+        experts = self.cursor.fetchall()
+        result = []
+        for m in experts:
+            result.append(m[0])
         return result
 
     # Close connection

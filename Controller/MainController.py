@@ -1,47 +1,39 @@
+from Model.DB import ConnectionDB
+from Model.Protocol import generate_protocol_func
+
+
 def get_labs_list():
-    return [1, 2, 3]
+    ini_db = ConnectionDB()
+    return ini_db.get_all_labs()
 
 
-def get_customer_list(lab):
-    if lab == '1':
-        return ['a', 'b', 'c']
-    elif lab == '2':
-        return ['b', 'c', 'd']
-    else:
-        return ['c', 'd', 'e']
+def get_customer_list():
+    ini_db = ConnectionDB()
+    return ini_db.get_all_customer()
 
 
 def get_factors_list(customer):
-    if customer == 'a':
-        return ['Вибрация общая', 'Шум', 'Вибрация локальная']
-    elif customer == 'b':
-        return ['Шум', 'Вибрация общая']
-    else:
-        return ['Вибрация общая', 'Шум']
+    ini_db = ConnectionDB()
+    return ini_db.get_customer_factors(customer)
 
 
 def get_measure_list(factor):
-    if factor == 'Шум':
-        return ['Ассистент', 'Экофизика', 'Калибратор']
-    elif factor == 'Вибрация локальная':
-        return ['Ассистент', 'Экофизика', 'Виброкалибратор']
-    elif factor == 'Вибрация общая':
-        return ['Ассистент', 'Экофизика', 'Виброкалибратор']
+    ini_db = ConnectionDB()
+    return ini_db.get_measure_factor(factor)
 
 
 def get_experts_list():
-    return ['Вася', 'Петя', 'Маша', 'Саша']
+    ini_db = ConnectionDB()
+    return ini_db.get_experts_list()
 
 
 def get_methodologies_list(factor):
-    if factor == 'Шум':
-        return ['1234214', '421412', '421412']
-    elif factor == 'Вибрация локальная':
-        return ['1111', '2222', '3333']
-    elif factor == 'Вибрация общая':
-        return ['444', '4444', '5555']
+    ini_db = ConnectionDB()
+    return ini_db.get_methodologies_factor(factor)
 
 
 def generate_protocol(lab, cust, fact, zamer, oformitel, measure, methodologies, date, date_izm):
-    print(date, date_izm)
-
+    ini_db = ConnectionDB()
+    laboratory = ini_db.get_lab(lab, (zamer,), (oformitel,), (measure,), (methodologies,), fact)
+    customer = ini_db.get_customer(cust)
+    generate_protocol_func(laboratory, customer, date, date_izm)

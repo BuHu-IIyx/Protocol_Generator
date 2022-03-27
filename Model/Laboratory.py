@@ -126,7 +126,7 @@ class Laboratory:
                 cell.paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
 
-    def fill_measure(self, measure_list, doc):
+    def fill_measure(self, doc):
         doc.add_paragraph().add_run("11. Сведения о средствах измерения:").bold = True
         table = doc.add_table(rows=2, cols=6)
         table.style = 'Table Grid'
@@ -161,15 +161,15 @@ class Laboratory:
                 shading_elm = parse_xml(r'<w:shd {} w:fill="DEEAF6"/>'.format(nsdecls('w')))
                 cell._tc.get_or_add_tcPr().append(shading_elm)
 
-        for i in measure_list:
+        for i in self.measuring:
             cells = table.add_row().cells
-            for j, item in enumerate(self.get_measure(i)):
+            for j, item in enumerate(i.get_measuring()):
                 cells[j].paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 cells[j].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 cells[j].paragraphs[0].add_run(str(item)).font.size = Pt(9)
         return 0
 
-    def fill_methodology(self, methodology_list, doc):
+    def fill_methodology(self, doc):
         doc.add_paragraph().add_run("12. Идентификация используемого метода/методик (нормативно-техническая "
                                     "документация), а также дополнительная информация, востребованная заказчиком "
                                     "(НД, необходимые для оценки):").bold = True
@@ -189,9 +189,9 @@ class Laboratory:
             shading_elm = parse_xml(r'<w:shd {} w:fill="DEEAF6"/>'.format(nsdecls('w')))
             cell._tc.get_or_add_tcPr().append(shading_elm)
 
-        for i in methodology_list:
+        for i in self.methodologies:
             cells = table.add_row().cells
-            for j, item in enumerate(self.get_methodology(i)):
+            for j, item in enumerate(i.get_meth()):
                 cells[j].paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 cells[j].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 cells[j].paragraphs[0].add_run(str(item)).font.size = Pt(9)

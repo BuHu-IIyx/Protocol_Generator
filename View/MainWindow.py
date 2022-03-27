@@ -15,7 +15,7 @@ class MainWindow(tk.Frame):
         self.init_main_window()
 
     def lab_checked(self, event):
-        self.combo_cust.configure(values=get_customer_list(self.combo_labs.get()), state='normal')
+        self.combo_cust.configure(values=get_customer_list(), state='normal')
 
     def customer_checked(self, event):
         self.combo_factor.configure(values=get_factors_list(self.combo_cust.get()), state='normal')
@@ -126,7 +126,9 @@ class GenerateProtocolWindow(tk.Toplevel):
         methodologies = self.combo_methodologies.get()
         date = self.date.get_date()
         date_izm = self.date_zamer.get_date()
-        generate_protocol(self.lab, self.cust, self.fact, zamer, oformitel, measure, methodologies, date, date_izm)
+        generate_protocol(self.lab, self.cust, self.fact, zamer.split(': ')[0], oformitel.split(':')[0],
+                          measure.split(':')[0], methodologies.split(':')[0], date, date_izm)
+        self.destroy()
 
     def init_window(self):
         self.title('Создание протокола')
