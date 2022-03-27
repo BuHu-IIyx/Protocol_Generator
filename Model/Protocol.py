@@ -95,7 +95,7 @@ def generate_protocol(lab, customer, date_off, date_izm):
     run.italic = True
     run.font.size = Pt(8)
     add_page_number(table0.cell(0, 1).paragraphs[0])
-    doc.save('test.docx')
+    doc.save('testDB.docx')
 
 
 def create_element(name):

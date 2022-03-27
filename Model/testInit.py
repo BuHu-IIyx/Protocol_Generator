@@ -5,16 +5,20 @@ from Model.Customer import *
 import csv
 import datetime
 
+from Model.Protocol import generate_protocol
+
 
 def lab_ini():
     ini_db = ConnectionDB()
     lab = ini_db.get_lab('ЭКСПЕРТЭГИДА', (1,), (1,), (27, 28, 29), (31, 32, 33, 40))
-    # customer = ini_db.get_customer("ООО «Василек»")
+    customer = ini_db.get_customer("ООО «Василек»")
+    generate_protocol(lab, customer, '30.11.1988', '30.12.1988')
+
     # print(customer.get_hazard_wp())
     # print(customer.get_text('30.11.1988'))
-    print(lab.get_signature('30.11.1988'))
-    for measure in lab.methodologies:
-        print(measure.name)
+    # print(lab.get_measure(0))
+    # for measure in lab.methodologies:
+    #     print(measure.name)
     # ini_db.export_workplaces("ООО «Василек»", 0)
     # ini_db.export_workplaces("ООО «Василек»", 1)
     # file = 'Vasilek.csv'

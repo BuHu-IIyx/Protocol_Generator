@@ -34,33 +34,32 @@ class Laboratory:
             return self.name + " " + self.position + " " + self.certificate_number
 
     class Measuring:
-        def __init__(self, factory_number, name, accurate):
+        def __init__(self, factory_number, name, accurate, verification_certificates):
             self.factory_number = factory_number
             self.name = name
             self.accurate = accurate
-            self.verification_certificates = []
+            self.verification_certificates = verification_certificates
 
         def get_measuring(self):
-            last_cert = len(self.verification_certificates) - 1
-            return [self.name, self.factory_number, self.verification_certificates[last_cert].number,
-                    self.verification_certificates[last_cert].date_start,
-                    self.verification_certificates[last_cert].date_off, self.accurate]
+            return [self.name, self.factory_number, self.verification_certificates.get('number'),
+                    self.verification_certificates.get('date_start'),
+                    self.verification_certificates.get('date_off'), self.accurate]
 
-        class VerificationCertificate:
-            def __init__(self, number, date_start, date_off):
-                self.date_off = date_off
-                self.date_start = date_start
-                self.number = number
+        # class VerificationCertificate:
+        #     def __init__(self, number, date_start, date_off):
+        #         self.date_off = date_off
+        #         self.date_start = date_start
+        #         self.number = number
+        #
+        #     def get_verification(self):
+        #         return [self.number, self.date_start, self.date_off]
 
-            def get_verification(self):
-                return [self.number, self.date_start, self.date_off]
-
-        def add_verification_certificate(self, number, date_start, date_off):
-            new_certificate = self.VerificationCertificate(number, date_start, date_off)
-            if len(self.verification_certificates) == 0:
-                self.verification_certificates = [new_certificate]
-            else:
-                self.verification_certificates.append(new_certificate)
+        # def add_verification_certificate(self, number, date_start, date_off):
+        #     new_certificate = self.VerificationCertificate(number, date_start, date_off)
+        #     if len(self.verification_certificates) == 0:
+        #         self.verification_certificates = [new_certificate]
+        #     else:
+        #         self.verification_certificates.append(new_certificate)
 
     class Methodology:
         def __init__(self, application, name):
@@ -77,8 +76,8 @@ class Laboratory:
         else:
             self.experts.append(new_expert)
 
-    def add_measuring(self, factory_number, name, accurate):
-        new_measuring = self.Measuring(factory_number, name, accurate)
+    def add_measuring(self, factory_number, name, accurate, cert):
+        new_measuring = self.Measuring(factory_number, name, accurate, cert)
         if len(self.measuring) == 0:
             self.measuring = [new_measuring]
         else:

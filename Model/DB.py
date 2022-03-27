@@ -182,12 +182,15 @@ class ConnectionDB:
         for exp in exp_data:
             lab.add_expert(exp[0], exp[1], exp[2], 'zamer')
 
-        self.cursor.execute('SELECT factory_number, measuring_name, accurate FROM measuring WHERE '
-                            'measuring_id IN %s;',
+        self.cursor.execute('SELECT factory_number, measuring_name, accurate, "number", date_start, '
+                            'date_off FROM measuring INNER JOIN (SELECT DISTINCT ON (1) measure_id AS measure, '
+                            '"number", date_start, date_off FROM verification_certificate ORDER BY 1, date_off desc) '
+                            'AS cert ON measuring.measuring_id = measure WHERE measuring.measuring_id IN %s',
                             (measure_ids,))
         measure_data = self.cursor.fetchall()
         for measure in measure_data:
-            lab.add_measuring(measure[0], measure[1], measure[2])
+            cert = dict(number=measure[3], date_start=measure[4], date_off=measure[5])
+            lab.add_measuring(measure[0], measure[1], measure[2], cert)
 
         self.cursor.execute('SELECT application, name FROM methodology WHERE "ID" IN %s',
                             (methodology_ids,))
