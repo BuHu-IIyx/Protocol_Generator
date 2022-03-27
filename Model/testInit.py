@@ -10,9 +10,12 @@ from Model.Protocol import generate_protocol
 
 def lab_ini():
     ini_db = ConnectionDB()
-    lab = ini_db.get_lab('ЭКСПЕРТЭГИДА', (1,), (1,), (27, 28, 29), (31, 32, 33, 40))
-    customer = ini_db.get_customer("ООО «Василек»")
-    generate_protocol(lab, customer, '30.11.1988', '30.12.1988')
+    print(ini_db.get_customer_factors("ООО «Василек»"))
+    print(ini_db.get_all_labs())
+    print(ini_db.get_all_customer())
+    # lab = ini_db.get_lab('ЭКСПЕРТЭГИДА', (1,), (1,), (27, 28, 29), (31, 32, 33, 40))
+    # customer = ini_db.get_customer("ООО «Василек»")
+    # generate_protocol(lab, customer, '30.11.1988', '30.12.1988')
 
     # print(customer.get_hazard_wp())
     # print(customer.get_text('30.11.1988'))

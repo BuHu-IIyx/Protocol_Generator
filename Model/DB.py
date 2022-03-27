@@ -162,6 +162,7 @@ class ConnectionDB:
                     self.add_weather_conditions(row[0], float(row[3].replace(',', '.')), row[4], row[5])
                 count += 1
 
+    # Laboratory fabric
     def get_lab(self, lab_short_name, experts_ids, zamer_ids, measure_ids, methodology_ids):
         self.cursor.execute('SELECT laboratory_id, short_name, name, name_laboratory, lab_logo, director, address, '
                             'certificate_number, phone, e_mail FROM laboratory WHERE short_name = %s',
@@ -200,6 +201,7 @@ class ConnectionDB:
 
         return lab
 
+    # Customer fabric
     def get_customer(self, customer_short_name):
         self.cursor.execute('SELECT customer_id, short_name, name, legal_address, actual_address, contract_number, '
                             'contract_date FROM customer WHERE short_name = %s',
@@ -231,6 +233,58 @@ class ConnectionDB:
                     hazard = False
                 customer.departments[n].add_working_area(area[0], area[1], hazard, weather, params)
         return customer
+
+    # Interface data
+    # Get laboratories list
+    def get_all_labs(self):
+        self.cursor.execute('SELECT short_name FROM laboratory')
+        labs = self.cursor.fetchall()
+        labs_name_list = []
+        for lab in labs:
+            if len(labs_name_list) == 0:
+                labs_name_list = [lab[0]]
+            else:
+                labs_name_list.append(lab[0])
+        return labs_name_list
+
+    # Get customers list
+    def get_all_customer(self):
+        self.cursor.execute('SELECT short_name FROM customer')
+        customers = self.cursor.fetchall()
+        customers_name_list = []
+        for cust in customers:
+            if len(customers_name_list) == 0:
+                customers_name_list = [cust[0]]
+            else:
+                customers_name_list.append(cust[0])
+        return customers_name_list
+
+    # Get factors from dictionary
+    def get_all_factors(self):
+        self.cursor.execute('SELECT factor_id, factor FROM factor_dic WHERE factor_id != 0')
+        factors = self.cursor.fetchall()
+        factors_name_list = dict()
+        for fact in factors:
+            factors_name_list[fact[0]] = fact[1]
+        return factors_name_list
+
+    # Get factors from customer
+    def get_customer_factors(self, customer_name):
+        self.cursor.execute('SELECT BOOL_OR(is_chemestry), ''false'', BOOL_OR(is_dust), BOOL_OR(is_noise), '
+                            'BOOL_OR(is_infrasound), ''false'', BOOL_OR(is_general_vibration), '
+                            'BOOL_OR(is_local_vibration), BOOL_OR(is_electromagnetic), ''false'', '
+                            'BOOL_OR(is_microclimate), BOOL_OR(is_illumination), ''false'', ''false'', '
+                            'BOOL_OR(is_aeroion) FROM department_working_area WHERE department_id IN (SELECT '
+                            'department_id FROM customers_departments WHERE customer_id = '
+                            '(SELECT customer_id FROM customer WHERE short_name = %s))',
+                            (customer_name,))
+        customer_fact = self.cursor.fetchone()
+        all_fact = self.get_all_factors()
+        result = []
+        for i in range(0, 14):
+            if customer_fact[i]:
+                result.append(all_fact.get(i+1))
+        return result
 
     # Close connection
     def __del__(self):
