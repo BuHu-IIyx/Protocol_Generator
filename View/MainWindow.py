@@ -1,16 +1,17 @@
 import tkinter as tk
+from tkinter import CENTER, W, E
 from tkinter import ttk
 from tkcalendar import Calendar, DateEntry
 
 from Controller.MainController import get_labs_list, get_customer_list, get_factors_list, generate_protocol, \
-    get_measure_list, get_methodologies_list, get_experts_list
+    get_measure_list, get_methodologies_list, get_experts_list, get_customer, add_laboratory_click, add_customer_click
 
 
 class MainWindow(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
         root.title("Производственный контроль")
-        root.geometry("650x450+300+200")
+        root.geometry("650x445+300+200")
         root.resizable(False, False)
         self.init_main_window()
 
@@ -19,13 +20,13 @@ class MainWindow(tk.Frame):
 
     def customer_checked(self, event):
         self.combo_factor.configure(values=get_factors_list(self.combo_cust.get()), state='normal')
+        self.show_button.configure(state='normal')
 
     def factor_checked(self, event):
-        self.show_button.configure(state='normal')
         self.create_button.configure(state='normal')
 
     def show_button_click(self):
-        self.generate_tree(self.combo_factor.get())
+        self.generate_tree(self.combo_cust.get())
 
     def create_button_click(self):
         lab = self.combo_labs.get()
@@ -33,48 +34,31 @@ class MainWindow(tk.Frame):
         fact = self.combo_factor.get()
         GenerateProtocolWindow(lab, cust, fact)
 
-    def generate_tree(self, factor):
-        if factor == 'Шум':
-            self.tree.configure(columns=('ID', 'area', 'source', 'nature', 'lvl', 'max_lvl'))
-            self.tree.column('ID', width=30, anchor=tk.CENTER)
-            self.tree.column('area', width=160, anchor=tk.CENTER)
-            self.tree.column('nature', width=115, anchor=tk.CENTER)
-            self.tree.column('source', width=115, anchor=tk.CENTER)
-            self.tree.column('lvl', width=115, anchor=tk.CENTER)
-            self.tree.column('max_lvl', width=115, anchor=tk.CENTER)
+    @staticmethod
+    def add_lab_button_click():
+        AddLabWindow()
 
-            self.tree.heading('ID', text='ID')
-            self.tree.heading('area', text='Место\nизмерений')
-            self.tree.heading('nature', text='Источник\nшума')
-            self.tree.heading('source', text='Характер\nшума')
-            self.tree.heading('lvl', text='Уровень\nзвука')
-            self.tree.heading('max_lvl', text='Максимальный\nуровень звука')
+    @staticmethod
+    def add_cust_button_click():
+        AddCustomerWindow()
 
-        elif factor == 'Вибрация общая':
-            self.tree.configure(columns=('ID', 'area', 'izm_params', 'result'))
-            self.tree.column('ID', width=30, anchor=tk.CENTER)
-            self.tree.column('area', width=160, anchor=tk.CENTER)
-            self.tree.column('izm_params', width=115, anchor=tk.CENTER)
-            self.tree.column('result', width=115, anchor=tk.CENTER)
+    def generate_tree(self, customer_name):
+        self.tree = ttk.Treeview(self, height=15)
+        self.tree['columns'] = ('customer',)
+        self.tree.column('#0', width=5)
+        self.tree.column('customer', anchor=W, width=640)
 
-            self.tree.heading('ID', text='ID')
-            self.tree.heading('area', text='Место\nизмерений')
-            self.tree.heading('izm_params', text='Наименование измеряемых\nпараметров')
-            self.tree.heading('result', text='Результат\nизмерений')
-
-        elif factor == 'Вибрация локальная':
-            self.tree.configure(columns=('ID', 'area', 'izm_params', 'result'))
-            self.tree.column('ID', width=30, anchor=tk.CENTER)
-            self.tree.column('area', width=160, anchor=tk.CENTER)
-            self.tree.column('izm_params', width=115, anchor=tk.CENTER)
-            self.tree.column('result', width=115, anchor=tk.CENTER)
-
-            self.tree.heading('ID', text='ID')
-            self.tree.heading('area', text='Место\nизмерений')
-            self.tree.heading('izm_params', text='Наименование измеряемых\nпараметров')
-            self.tree.heading('result', text='Результат\nизмерений')
-
-        self.tree.grid(column=0, row=4, columnspan=3)
+        self.tree.heading('customer', text=customer_name, anchor=CENTER)
+        dep_iid = ''
+        wa_iid = ''
+        customer = get_customer(customer_name)
+        for dep in customer.departments:
+            dep_iid = str(dep.department_id)
+            self.tree.insert(parent='', index='end', iid=dep_iid, values=(dep.name,))
+            for wa in dep.working_areas:
+                wa_iid = str(wa.number) + '. '
+                self.tree.insert(parent=dep_iid, index='end', iid=wa_iid, values=(wa_iid + wa.name,))
+        self.tree.grid(column=0, row=0, columnspan=6)
 
     def init_main_window(self):
         self.toolbar = tk.Frame(bd=2)
@@ -88,10 +72,18 @@ class MainWindow(tk.Frame):
         self.combo_labs.grid(column=1, row=0)
         self.combo_labs.bind("<<ComboboxSelected>>", self.lab_checked)
 
+        self.add_lab_button = ttk.Button(self.toolbar, text='+', state='normal', width=2,
+                                         command=self.add_lab_button_click)
+        self.add_lab_button.grid(column=2, row=0)
+
         tk.Label(self.toolbar, text="Организация:").grid(column=0, row=1)
         self.combo_cust = ttk.Combobox(self.toolbar, state='disabled')
         self.combo_cust.grid(column=1, row=1)
         self.combo_cust.bind("<<ComboboxSelected>>", self.customer_checked)
+
+        self.add_cust_button = ttk.Button(self.toolbar, text='+', state='normal', width=2,
+                                          command=self.add_cust_button_click)
+        self.add_cust_button.grid(column=2, row=1)
 
         tk.Label(self.toolbar, text="Производственный фактор:").grid(column=0, row=2)
         self.combo_factor = ttk.Combobox(self.toolbar, state='disabled')
@@ -100,15 +92,15 @@ class MainWindow(tk.Frame):
 
         self.show_button = ttk.Button(self.toolbar, text='Показать данные', state='disable', width=20,
                                       command=self.show_button_click)
-        self.show_button.grid(column=2, row=1)
+        self.show_button.grid(column=3, row=1)
 
         self.create_button = ttk.Button(self.toolbar, text='Создать протокол', state='disable', width=20,
                                         command=self.create_button_click)
-        self.create_button.grid(column=2, row=2)
+        self.create_button.grid(column=3, row=2)
 
         tk.Label(self.toolbar, text="").grid(column=0, row=3)
 
-        self.tree = ttk.Treeview(self.toolbar, height=30, show='headings')
+        # self.tree = ttk.Treeview(self.toolbar, height=30, show='headings')
 
 
 class GenerateProtocolWindow(tk.Toplevel):
@@ -165,5 +157,116 @@ class GenerateProtocolWindow(tk.Toplevel):
         self.exit_button = ttk.Button(self, text='Отмена', width=20, command=self.destroy)
         self.exit_button.grid(column=0, row=7)
 
-        self.create_button = ttk.Button(self, text='Создать', width=20, command=self.create_button_click)
+        self.create_button = ttk.Button(self, text='Добавить', width=20, command=self.create_button_click)
         self.create_button.grid(column=1, row=7)
+
+
+class AddLabWindow(tk.Toplevel):
+    def __init__(self):
+        super().__init__()
+        self.init_window()
+
+    def add_button_click(self):
+        add_laboratory_click(self.entry_short_name.get(), self.entry_name, self.entry_name_lab, self.entry_logo,
+                             self.entry_director, self.entry_address, self.entry_certificate_number, self.entry_phone,
+                             self.entry_e_mail)
+        self.destroy()
+
+    def init_window(self):
+        self.title('Добавить лабораторию')
+        self.geometry('500x280+400+300')
+        self.resizable(False, False)
+
+        self.grab_set()
+        self.focus_set()
+
+        tk.Label(self, text="Название сокращенное:", bd=5).grid(column=0, row=1)
+        self.entry_short_name = ttk.Entry(self, width=55)
+        self.entry_short_name.grid(column=1, row=1, columnspan=2)
+
+        tk.Label(self, text="Название полное:", bd=5).grid(column=0, row=2)
+        self.entry_name = ttk.Entry(self, width=55)
+        self.entry_name.grid(column=1, row=2, columnspan=2)
+
+        tk.Label(self, text="Название лаборатории:", bd=5).grid(column=0, row=3)
+        self.entry_name_lab = ttk.Entry(self, width=55)
+        self.entry_name_lab.grid(column=1, row=3, columnspan=2)
+
+        tk.Label(self, text="Логотип:", bd=5).grid(column=0, row=4)
+        self.entry_logo = ttk.Entry(self, width=55)
+        self.entry_logo.grid(column=1, row=4, columnspan=2)
+
+        tk.Label(self, text="Руководитель:", bd=5).grid(column=0, row=5)
+        self.entry_director = ttk.Entry(self, width=55)
+        self.entry_director.grid(column=1, row=5, columnspan=2)
+
+        tk.Label(self, text="Адрес:", bd=5).grid(column=0, row=6)
+        self.entry_address = ttk.Entry(self, width=55)
+        self.entry_address.grid(column=1, row=6, columnspan=2)
+
+        tk.Label(self, text="Номер сертификата:", bd=5).grid(column=0, row=7)
+        self.entry_certificate_number = ttk.Entry(self, width=55)
+        self.entry_certificate_number.grid(column=1, row=7, columnspan=2)
+
+        tk.Label(self, text="Телефон:", bd=5).grid(column=0, row=8)
+        self.entry_phone = ttk.Entry(self, width=55)
+        self.entry_phone.grid(column=1, row=8, columnspan=2)
+
+        tk.Label(self, text="E-mail:", bd=5).grid(column=0, row=9)
+        self.entry_e_mail = ttk.Entry(self, width=55)
+        self.entry_e_mail.grid(column=1, row=9, columnspan=2)
+
+        self.exit_button = ttk.Button(self, text='Отмена', width=20, command=self.destroy)
+        self.exit_button.grid(column=1, row=10)
+
+        self.create_button = ttk.Button(self, text='Создать', width=20, command=self.add_button_click)
+        self.create_button.grid(column=2, row=10)
+
+
+class AddCustomerWindow(tk.Toplevel):
+    def __init__(self):
+        super().__init__()
+        self.init_window()
+
+    def add_button_click(self):
+        add_customer_click(self.entry_short_name.get(), self.entry_name, self.entry_legal_address,
+                           self.entry_actual_address, self.entry_contract_number, self.entry_contract_date)
+        self.destroy()
+
+    def init_window(self):
+        self.title('Добавить заказчика.')
+        self.geometry('500x220+400+300')
+        self.resizable(False, False)
+
+        self.grab_set()
+        self.focus_set()
+
+        tk.Label(self, text="Название сокращенное:", bd=5).grid(column=0, row=1)
+        self.entry_short_name = ttk.Entry(self, width=55)
+        self.entry_short_name.grid(column=1, row=1, columnspan=2)
+
+        tk.Label(self, text="Название полное:", bd=5).grid(column=0, row=2)
+        self.entry_name = ttk.Entry(self, width=55)
+        self.entry_name.grid(column=1, row=2, columnspan=2)
+
+        tk.Label(self, text="Юридический адрес:", bd=5).grid(column=0, row=3)
+        self.entry_legal_address = ttk.Entry(self, width=55)
+        self.entry_legal_address.grid(column=1, row=3, columnspan=2)
+
+        tk.Label(self, text="Фактический адрес:", bd=5).grid(column=0, row=4)
+        self.entry_actual_address = ttk.Entry(self, width=55)
+        self.entry_actual_address.grid(column=1, row=4, columnspan=2)
+
+        tk.Label(self, text="Номер договора:", bd=5).grid(column=0, row=5)
+        self.entry_contract_number = ttk.Entry(self, width=55)
+        self.entry_contract_number.grid(column=1, row=5, columnspan=2)
+
+        tk.Label(self, text="Дата договора:", bd=5).grid(column=0, row=6)
+        self.entry_contract_date = DateEntry(self, width=50, foreground="white", bd=2)
+        self.entry_contract_date.grid(column=1, row=6, columnspan=2)
+
+        self.exit_button = ttk.Button(self, text='Отмена', width=20, command=self.destroy)
+        self.exit_button.grid(column=1, row=7)
+
+        self.create_button = ttk.Button(self, text='Создать', width=20, command=self.add_button_click)
+        self.create_button.grid(column=2, row=7)
