@@ -1,11 +1,13 @@
 import tkinter as tk
 from tkinter import CENTER, W, E, S
 from tkinter import ttk
+from tkinter.filedialog import asksaveasfilename, askopenfilename
 from tkcalendar import Calendar, DateEntry
 
 from Controller.MainController import get_labs_list, get_customer_list, get_factors_list, generate_protocol, \
     get_measure_list, get_methodologies_list, get_experts_list, get_customer, add_laboratory_click, add_customer_click, \
-    add_department_click, add_workplace_click, edit_department_click, edit_workplace_click
+    add_department_click, add_workplace_click, edit_department_click, edit_workplace_click, export_workplaces_click, \
+    import_workplaces_click, import_wp_click
 
 
 class MainWindow(tk.Frame):
@@ -22,9 +24,12 @@ class MainWindow(tk.Frame):
     def customer_checked(self, event):
         self.combo_factor.configure(values=get_factors_list(self.combo_cust.get()), state='normal')
         self.show_button.configure(state='normal')
+        self.import_wp_button.configure(state='normal')
 
     def factor_checked(self, event):
         self.create_button.configure(state='normal')
+        self.export_button.configure(state='normal')
+        self.import_button.configure(state='normal')
 
     def show_button_click(self):
         self.generate_tree(self.combo_cust.get())
@@ -63,12 +68,27 @@ class MainWindow(tk.Frame):
             department_id = self.tree.parent(self.tree.focus())
             department_name = self.tree.item(department_id).get('values')[0]
             wp_name = self.tree.item(self.tree.focus()).get('values')[0]
-            # AddWorkplaceWindow(department_id, department_name, customer_name, wp_name)
+            wp_id = self.tree.focus()
+            wp_id = wp_id.partition('.')[0]
+            AddWorkplaceWindow(department_id, department_name, customer_name, wp_name, int(wp_id))
         else:
             department_id = self.tree.focus()
             customer_name = self.tree.heading('customer').get('text')
             department_name = self.tree.item(department_id).get('values')[0]
             AddDepartmentWindow(customer_name, department_name, int(department_id))
+
+    def export_button_click(self):
+        file = asksaveasfilename(defaultextension=".csv", initialfile="report.csv")
+        export_workplaces_click(file, self.combo_cust.get(), self.combo_factor.get())
+
+    def import_button_click(self):
+        file = askopenfilename()
+        import_workplaces_click(file, self.combo_factor.get())
+        print(file)
+
+    def import_wp_button_click(self):
+        file = askopenfilename()
+        import_wp_click(file, self.combo_cust.get())
 
     def update_treeview(self, customer_name):
         self.tree.heading('customer', text=customer_name, anchor=CENTER)
@@ -89,16 +109,6 @@ class MainWindow(tk.Frame):
             for i in self.tree.get_children():
                 self.tree.delete(i)
             self.update_treeview(customer_name)
-            # self.tree.heading('customer', text=customer_name, anchor=CENTER)
-            # dep_iid = ''
-            # wa_iid = ''
-            # customer = get_customer(customer_name)
-            # for dep in customer.departments:
-            #     dep_iid = str(dep.department_id)
-            #     self.tree.insert(parent='', index='end', iid=dep_iid, values=(dep.name,))
-            #     for wa in dep.working_areas:
-            #         wa_iid = str(wa.number) + '. '
-            #         self.tree.insert(parent=dep_iid, index='end', iid=wa_iid, values=(wa_iid + wa.name,))
 
         else:
             self.grid_frame = tk.Frame(bd=2)
@@ -106,13 +116,15 @@ class MainWindow(tk.Frame):
 
             self.add_department_button = ttk.Button(self.grid_frame, text='Добавить отдел', state='normal',
                                                     command=self.add_department_button_click)
-            # self.add_department_button.grid(column=0, row=0)
             self.add_department_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
             self.add_workplace_button = ttk.Button(self.grid_frame, text='Добавить РМ', state='normal',
                                                    command=self.add_workplace_button_click)
-            # self.add_workplace_button.grid(column=1, row=0)
             self.add_workplace_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+            self.edit_button = ttk.Button(self.grid_frame, text='Изменить', state='normal',
+                                          command=self.edit_button_click)
+            self.edit_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
             self.tree_frame = tk.Frame(bd=2)
             self.tree_frame.pack(side=tk.TOP, fill=tk.BOTH)
@@ -124,17 +136,6 @@ class MainWindow(tk.Frame):
 
             self.update_treeview(customer_name)
 
-            # self.tree.heading('customer', text=customer_name, anchor=CENTER)
-            # dep_iid = ''
-            # wa_iid = ''
-            # customer = get_customer(customer_name)
-            # for dep in customer.departments:
-            #     dep_iid = str(dep.department_id)
-            #     self.tree.insert(parent='', index='end', iid=dep_iid, values=(dep.name,))
-            #     for wa in dep.working_areas:
-            #         wa_iid = str(wa.number) + '. '
-            #         self.tree.insert(parent=dep_iid, index='end', iid=wa_iid, values=(wa_iid + wa.name,))
-            # # self.tree.grid(column=0, row=1, columnspan=60)
             self.tree.pack(side=tk.LEFT, fill=tk.BOTH)
 
     def init_main_window(self):
@@ -169,15 +170,25 @@ class MainWindow(tk.Frame):
 
         self.show_button = ttk.Button(self.toolbar, text='Показать данные', state='disable', width=20,
                                       command=self.show_button_click)
-        self.show_button.grid(column=3, row=1)
+        self.show_button.grid(column=4, row=1)
 
         self.create_button = ttk.Button(self.toolbar, text='Создать протокол', state='disable', width=20,
                                         command=self.create_button_click)
-        self.create_button.grid(column=3, row=2)
+        self.create_button.grid(column=4, row=2)
+
+        self.import_wp_button = ttk.Button(self.toolbar, text='Импорт РМ', state='disable', width=15,
+                                           command=self.import_wp_button_click)
+        self.import_wp_button.grid(column=3, row=0)
+
+        self.export_button = ttk.Button(self.toolbar, text='Экспорт зон', state='disable', width=15,
+                                        command=self.export_button_click)
+        self.export_button.grid(column=3, row=1)
+
+        self.import_button = ttk.Button(self.toolbar, text='Импорт зон', state='disable', width=15,
+                                        command=self.import_button_click)
+        self.import_button.grid(column=3, row=2)
 
         tk.Label(self.toolbar, text="").grid(column=0, row=3)
-
-        # self.tree = ttk.Treeview(self.toolbar, height=30, show='headings')
 
 
 class GenerateProtocolWindow(tk.Toplevel):

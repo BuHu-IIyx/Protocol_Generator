@@ -75,3 +75,19 @@ def edit_department_click(dep_id, new_name):
 def edit_workplace_click(workplace_id, name, is_noise, is_local_vibration, is_general_vibration):
     ini_db = ConnectionDB()
     ini_db.edit_working_area(workplace_id, name, is_noise, is_local_vibration, is_general_vibration)
+
+
+def export_workplaces_click(file, short_name, factor=''):
+    ini_db = ConnectionDB()
+    ini_db.export_workplaces(short_name, factor, file)
+
+
+def import_workplaces_click(file, factor=''):
+    ini_db = ConnectionDB()
+    ini_db.import_workplaces(file, factor)
+
+
+def import_wp_click(file, short_name):
+    ini_db = ConnectionDB()
+    ini_db.import_csv_customer(file, short_name)
+

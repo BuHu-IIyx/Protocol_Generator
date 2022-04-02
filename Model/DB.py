@@ -139,31 +139,45 @@ class ConnectionDB:
                         count_departments += 1
                     else:
                         self.add_working_area(row[1], department_id, row[2], row[3], row[4], row[5], row[6], row[7],
-                                              row[8],
-                                              row[9], row[10], row[11])
+                                              row[8], row[9], row[10], row[11])
                 count += 1
 
     # Create CSV file with departments and workplaces for import data in fields
-    def export_workplaces(self, short_name, factor):
+    def export_workplaces(self, short_name, factor_name, file):
         customer_id = self.get_customer_id(short_name)
+        factor = self.get_factor_id(factor_name)
         if factor == 0:
             header = ('working_area_id', 'department', 'working_area', 'temperature', 'atmo_pressure', 'humidity')
-            short_name += '(meteo)'
-        elif factor == 1:
+        elif factor == 4:
             header = ('working_area_id', 'department', 'working_area', 'noise_source', 'nature_of_noise',
                       'sound_lvl', 'max_sound_lvl', 'eq_sound_lvl')
-            short_name += '(noise)'
+        elif factor == 8:
+            header = ('working_area_id', 'department', 'working_area', 'noise_source', 'nature_of_noise',
+                      'sound_lvl', 'max_sound_lvl', 'eq_sound_lvl')
+        elif factor == 7:
+            header = ('working_area_id', 'department', 'working_area', 'noise_source', 'nature_of_noise',
+                      'sound_lvl', 'max_sound_lvl', 'eq_sound_lvl')
         else:
-            header = ('1', '2', '3', '4')
-            short_name += '(other)'
-        file = f'{short_name}.csv'
+            header = 0
+
         with open(file, 'w', encoding='Windows-1251', newline='') as r_file:
             writer = csv.writer(r_file, delimiter=";")
             writer.writerow(header)
             work_places = self.get_workplaces_in_customer(customer_id)
             writer.writerows(work_places)
 
-    # Import noise parameters in DB
+    def import_workplaces(self, file, factor_name):
+        factor = self.get_factor_id(factor_name)
+        if factor == 0:
+            self.import_weather_conditions(file)
+        elif factor == 4:
+            self.import_noise_params(file)
+        elif factor == 8:
+            print('General')
+        elif factor == 7:
+            print('Local')
+
+            # Import noise parameters in DB
     def import_noise_params(self, file):
         with open(file, encoding='Windows-1251') as r_file:
             file_reader = csv.reader(r_file, delimiter=";")
@@ -180,7 +194,8 @@ class ConnectionDB:
             count = 0
             for row in file_reader:
                 if count != 0:
-                    self.add_weather_conditions(row[0], float(row[3].replace(',', '.')), row[4], row[5])
+                    self.add_weather_conditions(row[0], float(row[3].replace(',', '.')), row[4],
+                                                float(row[5].replace(',', '.')))
                 count += 1
 
     # Laboratory fabric
