@@ -1,10 +1,11 @@
 import tkinter as tk
-from tkinter import CENTER, W, E
+from tkinter import CENTER, W, E, S
 from tkinter import ttk
 from tkcalendar import Calendar, DateEntry
 
 from Controller.MainController import get_labs_list, get_customer_list, get_factors_list, generate_protocol, \
-    get_measure_list, get_methodologies_list, get_experts_list, get_customer, add_laboratory_click, add_customer_click
+    get_measure_list, get_methodologies_list, get_experts_list, get_customer, add_laboratory_click, add_customer_click, \
+    add_department_click, add_workplace_click, edit_department_click, edit_workplace_click
 
 
 class MainWindow(tk.Frame):
@@ -42,23 +43,99 @@ class MainWindow(tk.Frame):
     def add_cust_button_click():
         AddCustomerWindow()
 
-    def generate_tree(self, customer_name):
-        self.tree = ttk.Treeview(self, height=15)
-        self.tree['columns'] = ('customer',)
-        self.tree.column('#0', width=5)
-        self.tree.column('customer', anchor=W, width=640)
+    def add_department_button_click(self):
+        customer_name = self.tree.heading('customer').get('text')
+        AddDepartmentWindow(customer_name)
 
+    def add_workplace_button_click(self):
+        customer_name = self.tree.heading('customer').get('text')
+        if '.' in self.tree.focus():
+            department_id = self.tree.parent(self.tree.focus())
+        else:
+            department_id = self.tree.focus()
+
+        department_name = self.tree.item(department_id).get('values')[0]
+        AddWorkplaceWindow(department_id, department_name, customer_name)
+
+    def edit_button_click(self):
+        customer_name = self.tree.heading('customer').get('text')
+        if '.' in self.tree.focus():
+            department_id = self.tree.parent(self.tree.focus())
+            department_name = self.tree.item(department_id).get('values')[0]
+            wp_name = self.tree.item(self.tree.focus()).get('values')[0]
+            # AddWorkplaceWindow(department_id, department_name, customer_name, wp_name)
+        else:
+            department_id = self.tree.focus()
+            customer_name = self.tree.heading('customer').get('text')
+            department_name = self.tree.item(department_id).get('values')[0]
+            AddDepartmentWindow(customer_name, department_name, int(department_id))
+
+    def update_treeview(self, customer_name):
         self.tree.heading('customer', text=customer_name, anchor=CENTER)
         dep_iid = ''
         wa_iid = ''
+        count = 1
         customer = get_customer(customer_name)
         for dep in customer.departments:
             dep_iid = str(dep.department_id)
             self.tree.insert(parent='', index='end', iid=dep_iid, values=(dep.name,))
             for wa in dep.working_areas:
                 wa_iid = str(wa.number) + '. '
-                self.tree.insert(parent=dep_iid, index='end', iid=wa_iid, values=(wa_iid + wa.name,))
-        self.tree.grid(column=0, row=0, columnspan=6)
+                self.tree.insert(parent=dep_iid, index='end', iid=wa_iid, values=(str(count) + '. ' + wa.name,))
+                count += 1
+
+    def generate_tree(self, customer_name):
+        if hasattr(self, 'tree'):
+            for i in self.tree.get_children():
+                self.tree.delete(i)
+            self.update_treeview(customer_name)
+            # self.tree.heading('customer', text=customer_name, anchor=CENTER)
+            # dep_iid = ''
+            # wa_iid = ''
+            # customer = get_customer(customer_name)
+            # for dep in customer.departments:
+            #     dep_iid = str(dep.department_id)
+            #     self.tree.insert(parent='', index='end', iid=dep_iid, values=(dep.name,))
+            #     for wa in dep.working_areas:
+            #         wa_iid = str(wa.number) + '. '
+            #         self.tree.insert(parent=dep_iid, index='end', iid=wa_iid, values=(wa_iid + wa.name,))
+
+        else:
+            self.grid_frame = tk.Frame(bd=2)
+            self.grid_frame.pack(side=tk.TOP, fill=tk.X)
+
+            self.add_department_button = ttk.Button(self.grid_frame, text='Добавить отдел', state='normal',
+                                                    command=self.add_department_button_click)
+            # self.add_department_button.grid(column=0, row=0)
+            self.add_department_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+            self.add_workplace_button = ttk.Button(self.grid_frame, text='Добавить РМ', state='normal',
+                                                   command=self.add_workplace_button_click)
+            # self.add_workplace_button.grid(column=1, row=0)
+            self.add_workplace_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+            self.tree_frame = tk.Frame(bd=2)
+            self.tree_frame.pack(side=tk.TOP, fill=tk.BOTH)
+
+            self.tree = ttk.Treeview(self.tree_frame, height=14, selectmode='browse')
+            self.tree['columns'] = ('customer',)
+            self.tree.column('#0', width=5)
+            self.tree.column('customer', anchor=W, width=635)
+
+            self.update_treeview(customer_name)
+
+            # self.tree.heading('customer', text=customer_name, anchor=CENTER)
+            # dep_iid = ''
+            # wa_iid = ''
+            # customer = get_customer(customer_name)
+            # for dep in customer.departments:
+            #     dep_iid = str(dep.department_id)
+            #     self.tree.insert(parent='', index='end', iid=dep_iid, values=(dep.name,))
+            #     for wa in dep.working_areas:
+            #         wa_iid = str(wa.number) + '. '
+            #         self.tree.insert(parent=dep_iid, index='end', iid=wa_iid, values=(wa_iid + wa.name,))
+            # # self.tree.grid(column=0, row=1, columnspan=60)
+            self.tree.pack(side=tk.LEFT, fill=tk.BOTH)
 
     def init_main_window(self):
         self.toolbar = tk.Frame(bd=2)
@@ -234,7 +311,7 @@ class AddCustomerWindow(tk.Toplevel):
         self.destroy()
 
     def init_window(self):
-        self.title('Добавить заказчика.')
+        self.title('Добавить заказчика')
         self.geometry('500x220+400+300')
         self.resizable(False, False)
 
@@ -270,3 +347,98 @@ class AddCustomerWindow(tk.Toplevel):
 
         self.create_button = ttk.Button(self, text='Создать', width=20, command=self.add_button_click)
         self.create_button.grid(column=2, row=7)
+
+
+class AddDepartmentWindow(tk.Toplevel):
+    def __init__(self, customer_name, department_name='', department_id=0):
+        super().__init__()
+        self.customer_name = customer_name
+        self.department_name = department_name
+        self.department_id = department_id
+        self.init_window()
+
+    def add_button_click(self):
+        if self.department_id == 0:
+            add_department_click(self.entry_department_name.get(), self.customer_name)
+        else:
+            edit_department_click(self.department_id, self.entry_department_name.get())
+        self.destroy()
+
+    def init_window(self):
+        self.title('Добавить отдел')
+        self.geometry('500x130+400+300')
+        self.resizable(False, False)
+
+        self.grab_set()
+        self.focus_set()
+
+        tk.Label(self, text=self.customer_name, bd=5).grid(column=0, row=0)
+
+        tk.Label(self, text="Название отдела:", bd=5).grid(column=0, row=1)
+        self.entry_department_name = ttk.Entry(self, width=55)
+        self.entry_department_name.insert(0, self.department_name)
+        self.entry_department_name.grid(column=1, row=1, columnspan=2)
+
+        self.exit_button = ttk.Button(self, text='Отмена', width=20, command=self.destroy)
+        self.exit_button.grid(column=1, row=2)
+
+        self.create_button = ttk.Button(self, text='Создать', width=20, command=self.add_button_click)
+        self.create_button.grid(column=2, row=2)
+
+
+class AddWorkplaceWindow(tk.Toplevel):
+    def __init__(self, department_id, department_name, customer_name, wp_name='', wp_id=0):
+        super().__init__()
+        self.department_id = department_id
+        self.customer_name = customer_name
+        self.department_name = department_name
+        self.wp_name = wp_name
+        self.wp_id = wp_id
+        self.init_window()
+
+    def add_button_click(self):
+        if self.wp_id != 0:
+            edit_workplace_click(self.wp_id, self.entry_wp_name.get(), self.check_noise.get(),
+                                 self.check_loc_vib.get(), self.check_gen_vib.get())
+        else:
+            add_workplace_click(self.entry_wp_name.get(), self.department_id, self.check_noise.get(),
+                                self.check_loc_vib.get(), self.check_gen_vib.get())
+        self.destroy()
+
+    def init_window(self):
+        self.title('Добавить отдел')
+        self.geometry('400x200+400+300')
+        self.resizable(False, False)
+
+        self.grab_set()
+        self.focus_set()
+
+        tk.Label(self, text=self.customer_name + ' - ' + self.department_name, bd=5).\
+            grid(column=0, row=0, columnspan=3, sticky=W)
+
+        tk.Label(self, text="Название точки:", bd=5).grid(column=0, row=2, sticky=W)
+        self.entry_wp_name = ttk.Entry(self, width=40)
+        self.entry_wp_name.insert(0, self.wp_name)
+        self.entry_wp_name.grid(column=1, row=2, columnspan=2)
+
+        tk.Label(self, text="Выберите факторы:", bd=5).grid(column=0, row=3, sticky=W)
+        self.check_noise = tk.BooleanVar()
+        self.check_noise.set(0)
+        self.check_loc_vib = tk.BooleanVar()
+        self.check_loc_vib.set(0)
+        self.check_gen_vib = tk.BooleanVar()
+        self.check_gen_vib.set(0)
+        ttk.Checkbutton(self, text='Шум', variable=self.check_noise, onvalue=1, offvalue=0).\
+            grid(column=1, row=3, columnspan=2, sticky=W)
+        ttk.Checkbutton(self, text='Вибрация локальная', variable=self.check_loc_vib, onvalue=1, offvalue=0).\
+            grid(column=1, row=4, columnspan=2, sticky=W)
+        ttk.Checkbutton(self, text='Вибрация общая', variable=self.check_gen_vib, onvalue=1, offvalue=0).\
+            grid(column=1, row=5, columnspan=2, sticky=W)
+
+        tk.Label(self, text=" ", bd=5).grid(column=0, row=6, columnspan=3)
+
+        self.exit_button = ttk.Button(self, text='Отмена', width=20, command=self.destroy)
+        self.exit_button.grid(column=1, row=6)
+
+        self.create_button = ttk.Button(self, text='Создать', width=20, command=self.add_button_click)
+        self.create_button.grid(column=2, row=6)

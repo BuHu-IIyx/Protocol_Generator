@@ -54,6 +54,10 @@ class ConnectionDB:
         self.cursor.execute('INSERT INTO customers_departments(name, customer_id) VALUES(%s, %s)', (name, customer_id))
         self.conn.commit()
 
+    def edit_department(self, dep_id, new_name):
+        self.cursor.execute('UPDATE customers_departments SET name=%s WHERE department_id=%s', (new_name, dep_id))
+        self.conn.commit()
+
     # Add working area in DB
     def add_working_area(self, name, department_id, is_noise, is_local_vibration, is_general_vibration, is_chemestry,
                          is_dust, is_infrasound, is_electromagnetic, is_microclimate, is_illumination, is_aeroion):
@@ -65,18 +69,29 @@ class ConnectionDB:
                              is_dust, is_infrasound, is_electromagnetic, is_microclimate, is_illumination, is_aeroion))
         self.conn.commit()
 
+    def edit_working_area(self, workplace_id, name, is_noise, is_local_vibration, is_general_vibration):
+        self.cursor.execute('UPDATE department_working_area SET name=%s, is_noise=%s, is_local_vibration=%s, '
+                            'is_general_vibration=%s WHERE working_area_id=%s',
+                            (name, is_noise, is_local_vibration, is_general_vibration, workplace_id))
+        self.conn.commit()
+
     # Add noise parameters in DB
     def add_noise_params(self, working_area_id, noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl):
         self.cursor.execute('INSERT INTO noise_params(working_area_id, noise_source, nature_of_noise, sound_lvl, '
-                            'max_sound_lvl, eq_sound_lvl) VALUES (%s, %s, %s, %s, %s, %s)',
-                            (working_area_id, noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl))
+                            'max_sound_lvl, eq_sound_lvl) VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (working_area_id)'
+                            ' DO UPDATE SET noise_source=%s, nature_of_noise=%s, sound_lvl=%s, max_sound_lvl=%s, '
+                            'eq_sound_lvl=%s', (working_area_id, noise_source, nature_of_noise, sound_lvl,
+                                                max_sound_lvl, eq_sound_lvl, noise_source, nature_of_noise, sound_lvl,
+                                                max_sound_lvl, eq_sound_lvl))
         self.conn.commit()
 
     # Add weather conditions in DB
     def add_weather_conditions(self, working_area_id, temperature, atmo_pressure, humidity):
         self.cursor.execute('INSERT INTO working_area_weather_condition(working_area_id, temperature, atmo_pressure, '
-                            'humidity) VALUES (%s, %s, %s, %s)',
-                            (working_area_id, temperature, atmo_pressure, humidity))
+                            'humidity) VALUES (%s, %s, %s, %s) ON CONFLICT (working_area_id) DO UPDATE SET '
+                            'temperature=%s, atmo_pressure=%s, humidity=%s',
+                            (working_area_id, temperature, atmo_pressure, humidity, temperature, atmo_pressure,
+                             humidity))
         self.conn.commit()
 
     # Get customer ID from DB on name
@@ -224,9 +239,9 @@ class ConnectionDB:
             n = len(customer.departments) - 1
             self.cursor.execute('SELECT department_working_area.working_area_id, name, temperature, atmo_pressure, '
                                 'humidity, noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl FROM '
-                                'department_working_area INNER JOIN working_area_weather_condition ON '
+                                'department_working_area LEFT JOIN working_area_weather_condition ON '
                                 'department_working_area.working_area_id = '
-                                'working_area_weather_condition.working_area_id INNER JOIN noise_params ON '
+                                'working_area_weather_condition.working_area_id LEFT JOIN noise_params ON '
                                 'working_area_weather_condition.working_area_id = noise_params.working_area_id WHERE '
                                 'department_working_area.department_id = %s AND is_noise = true',
                                 (dept[0],))
@@ -235,10 +250,15 @@ class ConnectionDB:
                 weather = dict(temperature=area[2], atmo_pressure=area[3], humidity=area[4])
                 params = dict(noise_source=area[5], nature_of_noise=area[6], sound_lvl=area[7], max_sound_lvl=area[8],
                               eq_sound_lvl=area[9])
-                if int(area[7]) > 80 or int(area[8]) > 110:
-                    hazard = True
+                if area[2] and area[5]:
+                    if int(area[7]) > 80 or int(area[8]) > 110:
+                        hazard = True
+                    else:
+                        hazard = False
                 else:
                     hazard = False
+                    weather = 0
+                    params = 0
                 customer.departments[n].add_working_area(area[0], area[1], hazard, weather, params)
         return customer
 

@@ -54,3 +54,24 @@ def add_customer_click(short_name, name, legal_address, actual_address, contract
     ini_db = ConnectionDB()
     ini_db.add_customer(short_name, name, legal_address, actual_address, contract_number, contract_date)
 
+
+def add_department_click(dep_name, customer_name):
+    ini_db = ConnectionDB()
+    customer_id = ini_db.get_customer_id(customer_name)
+    ini_db.add_department(dep_name, customer_id)
+
+
+def add_workplace_click(wp_name, dep_id, is_noise, is_local_vibration, is_general_vibration):
+    ini_db = ConnectionDB()
+    ini_db.add_working_area(wp_name, dep_id, is_noise, is_local_vibration, is_general_vibration, False, False, False,
+                            False, False, False, False)
+
+
+def edit_department_click(dep_id, new_name):
+    ini_db = ConnectionDB()
+    ini_db.edit_department(dep_id, new_name)
+
+
+def edit_workplace_click(workplace_id, name, is_noise, is_local_vibration, is_general_vibration):
+    ini_db = ConnectionDB()
+    ini_db.edit_working_area(workplace_id, name, is_noise, is_local_vibration, is_general_vibration)
