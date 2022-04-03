@@ -137,11 +137,11 @@ class ConnectionDB:
             factor = 'is_local_vibration'
         else:
             factor = 'is_chemestry'
-        self.cursor.execute('SELECT working_area_id, customers_departments.name, department_working_area.name '
-                            'FROM department_working_area INNER JOIN customers_departments '
-                            'ON department_working_area.department_id = customers_departments.department_id	'
-                            'WHERE customers_departments.customer_id=%s AND department_working_area.%s=true',
-                            (customer_id, factor))
+        SQL_string = f'SELECT working_area_id, customers_departments.name, department_working_area.name ' \
+                     f'FROM department_working_area INNER JOIN customers_departments ON ' \
+                     f'department_working_area.department_id = customers_departments.department_id	' \
+                     f'WHERE customers_departments.customer_id=%s AND department_working_area.{factor}=true'
+        self.cursor.execute(SQL_string, (customer_id, ))
         workplaces = self.cursor.fetchall()
         return workplaces
 
@@ -239,8 +239,7 @@ class ConnectionDB:
                 count += 1
 
     # Laboratory fabric
-    def get_lab(self, lab_short_name, experts_ids, zamer_ids, measure_ids, methodology_ids, fact):
-        factor_id = self.get_factor_id(fact)
+    def get_lab(self, lab_short_name, experts_ids, zamer_ids, measure_ids, methodology_ids, factor_id):
         self.cursor.execute('SELECT laboratory_id, short_name, name, name_laboratory, lab_logo, director, address, '
                             'certificate_number, phone, e_mail FROM laboratory WHERE short_name = %s',
                             (lab_short_name,))
@@ -280,8 +279,7 @@ class ConnectionDB:
         return lab
 
     # Customer fabric
-    def get_customer(self, customer_short_name, factor_name):
-        factor = self.get_factor_id(factor_name)
+    def get_customer(self, customer_short_name, factor):
         if factor == 4:
             factor_params = 'noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl'
             factor_table = 'noise_params'
@@ -304,8 +302,12 @@ class ConnectionDB:
                             (customer_short_name,))
         data = self.cursor.fetchone()
         customer = Customer(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
-        self.cursor.execute('SELECT department_id, name FROM customers_departments WHERE customer_id = %s',
-                            (customer.customer_id, ))
+        SQL_string = f'SELECT customers_departments.department_id, customers_departments.name ' \
+                     f'FROM customers_departments INNER JOIN department_working_area ' \
+                     f'ON customers_departments.department_id=department_working_area.department_id ' \
+                     f'WHERE {factor_n}=true AND customer_id=%s GROUP BY customers_departments.department_id, ' \
+                     f'customers_departments.name, customer_id, perent_dep_id'
+        self.cursor.execute(SQL_string, (customer.customer_id, ))
         depts = self.cursor.fetchall()
 
         for dept in depts:

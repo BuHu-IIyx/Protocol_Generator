@@ -79,16 +79,19 @@ class MainWindow(tk.Frame):
 
     def export_button_click(self):
         file = asksaveasfilename(defaultextension=".csv", initialfile="report.csv")
-        export_workplaces_click(file, self.combo_cust.get(), self.combo_factor.get())
+        if file:
+            export_workplaces_click(file, self.combo_cust.get(), self.combo_factor.get())
 
     def import_button_click(self):
         file = askopenfilename()
-        import_workplaces_click(file, self.combo_factor.get())
+        if file:
+            import_workplaces_click(file, self.combo_factor.get())
         print(file)
 
     def import_wp_button_click(self):
         file = askopenfilename()
-        import_wp_click(file, self.combo_cust.get())
+        if file:
+            import_wp_click(file, self.combo_cust.get())
 
     def update_treeview(self, customer_name):
         self.tree.heading('customer', text=customer_name, anchor=CENTER)

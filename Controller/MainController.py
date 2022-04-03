@@ -40,9 +40,10 @@ def get_customer(customer_short_name, factor_name):
 
 def generate_protocol(lab, cust, fact, zamer, oformitel, measure, methodologies, date, date_izm):
     ini_db = ConnectionDB()
-    laboratory = ini_db.get_lab(lab, (zamer,), (oformitel,), (measure,), (methodologies,), fact)
-    customer = ini_db.get_customer(cust)
-    generate_protocol_func(laboratory, customer, date, date_izm)
+    fact_id = ini_db.get_factor_id(fact)
+    laboratory = ini_db.get_lab(lab, (zamer,), (oformitel,), (measure,), (methodologies,), fact_id)
+    customer = ini_db.get_customer(cust, fact_id)
+    generate_protocol_func(laboratory, customer, date, date_izm, fact_id)
 
 
 def add_laboratory_click(short_name, name, name_lab, logo, director, address, certificate_number, phone, e_mail):

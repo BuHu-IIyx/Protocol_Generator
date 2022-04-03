@@ -5,7 +5,7 @@ from Model.Laboratory import *
 from Model.Customer import *
 
 
-def generate_protocol_func(lab, customer, date_off, date_izm):
+def generate_protocol_func(lab, customer, date_off, date_izm, fact_id):
     # Create and customization document
     doc = Document()
     current_section = doc.sections[-1]
@@ -46,7 +46,7 @@ def generate_protocol_func(lab, customer, date_off, date_izm):
     table2_cells[1].width = Mm(70)
     p = doc.add_paragraph()
 
-    run = p.add_run(customer.get_number_protocol())
+    run = p.add_run(customer.get_number_protocol(fact_id))
     p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
     run.bold = True
     p = doc.add_paragraph()
@@ -57,12 +57,13 @@ def generate_protocol_func(lab, customer, date_off, date_izm):
     lab.fill_methodology(doc)
     doc.add_paragraph()
     customer.fill_weather_table(doc)
-    doc.add_paragraph().add_run("14.  Результаты проверки работоспособности: уровни звукового давления на частотах "
-                                "калибратора, полученные в конце измерений, отличаются от полученных в начале измерений"
-                                " не более чем на 0,5 дБА").bold = True
-    doc.add_paragraph().add_run("15.  Временная характеристика шума: непостоянный, колеблющийся во времени;").\
-        bold = True
-    customer.fill_noise_table(doc)
+    if fact_id == 4:
+        customer.fill_noise_table(doc)
+    elif fact_id == 7:
+        customer.fill_vibration_table(doc, 0)
+    elif fact_id == 8:
+        customer.fill_vibration_table(doc, 1)
+
     p = doc.add_paragraph()
 
     p.add_run("* Испытания проводились по месту осуществления деятельности Заказчика. В случае проведения "
@@ -91,7 +92,7 @@ def generate_protocol_func(lab, customer, date_off, date_izm):
     run = table0.cell(0, 0).paragraphs[0].add_run(f"Частичное или полное воспроизведение протокола запрещены без письменного разрешения" \
                              f" руководителя испытательной лаборатории Результаты исследований (испытаний), измерений " \
                              f"относятся только к объектам (образцам), прошедшим испытания, отбор " \
-                             f"{customer.get_footer_number(date_off)}")
+                             f"{customer.get_footer_number(date_off, fact_id)}")
     run.italic = True
     run.font.size = Pt(8)
     add_page_number(table0.cell(0, 1).paragraphs[0])

@@ -57,6 +57,19 @@ class Customer:
                         self.noise_params.get('nature_of_noise'), self.noise_params.get('sound_lvl'), 80,
                         self.noise_params.get('max_sound_lvl'), 110, self.noise_params.get('eq_sound_lvl'), 80]
 
+            def get_vibration_parameter(self, type_vibe):
+                if type_vibe == 1:
+                    x = 126
+                    y = 126
+                    z = 126
+                else:
+                    x = 112
+                    y = 112
+                    z = 116
+                return [self.number, self.name, 'Корректированный уровень (ось X)', self.noise_params.get('result_x'),
+                        x, 'Корректированный уровень (ось Y)', self.noise_params.get('result_y'), y,
+                        'Корректированный уровень (ось Z)', self.noise_params.get('result_z'), z]
+
             def get_weather_condition(self):
                 return [self.number, self.name, self.weather_conditions.get('temperature'),
                         self.weather_conditions.get('atmo_pressure'), self.weather_conditions.get('humidity')]
@@ -97,11 +110,27 @@ class Customer:
                    "СанПиН 1.2.3685-21 «Гигиенические нормативы и требования к обеспечению безопасности и (или) " \
                    "безвредности для человека факторов среды обитания». "
 
-    def get_number_protocol(self):
-        return f"ПРОТОКОЛ № {self.contract_number}/Ш\nпроведения исследований, испытаний (измерений) шума"
+    def get_number_protocol(self, fact_id):
+        if fact_id == 4:
+            text = 'Ш\nпроведения исследований, испытаний (измерений) шума'
+        elif fact_id == 7:
+            text = 'ОВ\nпроведения исследований, испытаний (измерений) общей вибрации'
+        elif fact_id == 8:
+            text = 'ЛВ\nпроведения исследований, испытаний (измерений) локальной вибрации'
+        else:
+            text = 'Ш\nпроведения исследований, испытаний (измерений) шума'
+        return f"ПРОТОКОЛ № {self.contract_number}/{text}"
 
-    def get_footer_number(self, date):
-        return f"Протокол №{self.contract_number}/Ш от {date}"
+    def get_footer_number(self, date, fact_id):
+        if fact_id == 4:
+            text = 'Ш'
+        elif fact_id == 7:
+            text = 'ОВ'
+        elif fact_id == 8:
+            text = 'ЛВ'
+        else:
+            text = 'Ш'
+        return f"Протокол №{self.contract_number}/{text} от {date}"
 
     def fill_text(self, date_izm, paragraph):
         paragraph.add_run("1. Наименование организации (заказчика): ").bold = True
@@ -192,6 +221,11 @@ class Customer:
         return 0
 
     def fill_noise_table(self, doc):
+        doc.add_paragraph().add_run("14.  Результаты проверки работоспособности: уровни звукового давления на частотах "
+                                    "калибратора, полученные в конце измерений, отличаются от полученных в начале "
+                                    "измерений не более чем на 0,5 дБА").bold = True
+        doc.add_paragraph().add_run("15.  Временная характеристика шума: непостоянный, колеблющийся во времени;"). \
+            bold = True
         doc.add_paragraph().add_run(
             "16.  Результаты измерений параметров шума, дополнительная информация, востребованная "
             "заказчиком:").bold = True
@@ -233,4 +267,53 @@ class Customer:
                     area_cells[i].paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                     area_cells[i].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                     area_cells[i].paragraphs[0].add_run(str(item)).font.size = Pt(9)
+        return 0
+
+    def fill_vibration_table(self, doc, type_vibe):
+        doc.add_paragraph().add_run(
+            "14. Результаты измерений параметров «Уровень виброускорения, дБ», дополнительная информация,"
+            " востребованная заказчиком:").bold = True
+        table = doc.add_table(rows=1, cols=5)
+        table.style = 'Table Grid'
+        table.cell(0, 0).paragraphs[0].add_run("№\nточки\n(рабочего\nместа)").font.size = Pt(9)
+        table.cell(0, 1).paragraphs[0].add_run("Место измерений (наименование образца испытаний)*").font.size = Pt(9)
+        table.cell(0, 2).paragraphs[0].add_run("Наименование измеряемых параметров\n(рабочей зоны)").font.size = Pt(9)
+        table.cell(0, 3).paragraphs[0].add_run("Результат измерений").font.size = Pt(9)
+        table.cell(0, 4).paragraphs[0].add_run("Нормативное\nзначение").font.size = Pt(9)
+        for i in range(5):
+            cell = table.cell(0, i)
+            cell.paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+            cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+            shading_elm = parse_xml(r'<w:shd {} w:fill="DEEAF6"/>'.format(nsdecls('w')))
+            cell._tc.get_or_add_tcPr().append(shading_elm)
+
+        for dept in self.departments:
+            cells = table.add_row().cells
+            cells[0].merge(cells[4]).paragraphs[0].add_run(dept.name).font.size = Pt(9)
+            cells[0].paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+            cells[0].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+            for area in dept.working_areas:
+                area_cells = [table.add_row().cells, table.add_row().cells, table.add_row().cells]
+
+                vibe_params = area.get_vibration_parameter(type_vibe)
+
+                area_cells[0][0].merge(area_cells[2][0]).paragraphs[0].add_run(str(vibe_params[0])).font.size = Pt(9)
+                area_cells[0][1].merge(area_cells[2][1]).paragraphs[0].add_run(str(vibe_params[1])).font.size = Pt(9)
+
+                area_cells[0][2].paragraphs[0].add_run(str(vibe_params[2])).font.size = Pt(9)
+                area_cells[0][3].paragraphs[0].add_run(str(vibe_params[3])).font.size = Pt(9)
+                area_cells[0][4].paragraphs[0].add_run(str(vibe_params[4])).font.size = Pt(9)
+
+                area_cells[1][2].paragraphs[0].add_run(str(vibe_params[5])).font.size = Pt(9)
+                area_cells[1][3].paragraphs[0].add_run(str(vibe_params[6])).font.size = Pt(9)
+                area_cells[1][4].paragraphs[0].add_run(str(vibe_params[7])).font.size = Pt(9)
+
+                area_cells[2][2].paragraphs[0].add_run(str(vibe_params[8])).font.size = Pt(9)
+                area_cells[2][3].paragraphs[0].add_run(str(vibe_params[9])).font.size = Pt(9)
+                area_cells[2][4].paragraphs[0].add_run(str(vibe_params[10])).font.size = Pt(9)
+
+                for rows in area_cells:
+                    for cell in rows:
+                        cell.paragraphs[0].alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+                        cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         return 0
