@@ -85,6 +85,20 @@ class ConnectionDB:
                                                 max_sound_lvl, eq_sound_lvl))
         self.conn.commit()
 
+    def add_local_vibration_params(self, working_area_id, result_x, result_y, result_z):
+        self.cursor.execute('INSERT INTO local_vibration_params(working_area_id, result_x, result_y, result_z) '
+                            'VALUES (%s, %s, %s, %s) ON CONFLICT (working_area_id) DO UPDATE SET result_x=%s, '
+                            'result_y=%s, result_z=%s',
+                            (working_area_id, result_x, result_y, result_z, result_x, result_y, result_z))
+        self.conn.commit()
+
+    def add_general_vibration_params(self, working_area_id, result_x, result_y, result_z):
+        self.cursor.execute('INSERT INTO general_vibration_params(working_area_id, result_x, result_y, result_z) '
+                            'VALUES (%s, %s, %s, %s) ON CONFLICT (working_area_id) DO UPDATE SET result_x=%s, '
+                            'result_y=%s, result_z=%s',
+                            (working_area_id, result_x, result_y, result_z, result_x, result_y, result_z))
+        self.conn.commit()
+
     # Add weather conditions in DB
     def add_weather_conditions(self, working_area_id, temperature, atmo_pressure, humidity):
         self.cursor.execute('INSERT INTO working_area_weather_condition(working_area_id, temperature, atmo_pressure, '
@@ -114,12 +128,20 @@ class ConnectionDB:
         return factor_id[0]
 
     # Get all workplaces in customers departments
-    def get_workplaces_in_customer(self, customer_id):
+    def get_workplaces_in_customer(self, customer_id, factor_id=4):
+        if factor_id == 4:
+            factor = 'is_noise'
+        elif factor_id == 7:
+            factor = 'is_general_vibration'
+        elif factor_id == 8:
+            factor = 'is_local_vibration'
+        else:
+            factor = 'is_chemestry'
         self.cursor.execute('SELECT working_area_id, customers_departments.name, department_working_area.name '
                             'FROM department_working_area INNER JOIN customers_departments '
                             'ON department_working_area.department_id = customers_departments.department_id	'
-                            'WHERE customers_departments.customer_id=%s AND department_working_area.is_noise=true',
-                            (customer_id,))
+                            'WHERE customers_departments.customer_id=%s AND department_working_area.%s=true',
+                            (customer_id, factor))
         workplaces = self.cursor.fetchall()
         return workplaces
 
@@ -151,19 +173,17 @@ class ConnectionDB:
         elif factor == 4:
             header = ('working_area_id', 'department', 'working_area', 'noise_source', 'nature_of_noise',
                       'sound_lvl', 'max_sound_lvl', 'eq_sound_lvl')
-        elif factor == 8:
-            header = ('working_area_id', 'department', 'working_area', 'noise_source', 'nature_of_noise',
-                      'sound_lvl', 'max_sound_lvl', 'eq_sound_lvl')
         elif factor == 7:
-            header = ('working_area_id', 'department', 'working_area', 'noise_source', 'nature_of_noise',
-                      'sound_lvl', 'max_sound_lvl', 'eq_sound_lvl')
+            header = ('working_area_id', 'department', 'working_area', 'result_x', 'result_y', 'result_z')
+        elif factor == 8:
+            header = ('working_area_id', 'department', 'working_area', 'result_x', 'result_y', 'result_z')
         else:
             header = 0
 
         with open(file, 'w', encoding='Windows-1251', newline='') as r_file:
             writer = csv.writer(r_file, delimiter=";")
             writer.writerow(header)
-            work_places = self.get_workplaces_in_customer(customer_id)
+            work_places = self.get_workplaces_in_customer(customer_id, factor)
             writer.writerows(work_places)
 
     def import_workplaces(self, file, factor_name):
@@ -172,12 +192,32 @@ class ConnectionDB:
             self.import_weather_conditions(file)
         elif factor == 4:
             self.import_noise_params(file)
-        elif factor == 8:
-            print('General')
         elif factor == 7:
-            print('Local')
+            self.import_general_vibration_params(file)
+        elif factor == 8:
+            self.import_local_vibration_params(file)
 
-            # Import noise parameters in DB
+    # Import general vibration parameters in DB
+    def import_general_vibration_params(self, file):
+        with open(file, encoding='Windows-1251') as r_file:
+            file_reader = csv.reader(r_file, delimiter=";")
+            count = 0
+            for row in file_reader:
+                if count != 0:
+                    self.add_general_vibration_params(row[0], row[3], row[4], row[5])
+                count += 1
+
+    # Import general vibration parameters in DB
+    def import_local_vibration_params(self, file):
+        with open(file, encoding='Windows-1251') as r_file:
+            file_reader = csv.reader(r_file, delimiter=";")
+            count = 0
+            for row in file_reader:
+                if count != 0:
+                    self.add_local_vibration_params(row[0], row[3], row[4], row[5])
+                count += 1
+
+    # Import noise parameters in DB
     def import_noise_params(self, file):
         with open(file, encoding='Windows-1251') as r_file:
             file_reader = csv.reader(r_file, delimiter=";")
@@ -240,7 +280,25 @@ class ConnectionDB:
         return lab
 
     # Customer fabric
-    def get_customer(self, customer_short_name):
+    def get_customer(self, customer_short_name, factor_name):
+        factor = self.get_factor_id(factor_name)
+        if factor == 4:
+            factor_params = 'noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl'
+            factor_table = 'noise_params'
+            factor_n = 'is_noise'
+        elif factor == 7:
+            factor_params = 'result_x, result_y, result_z'
+            factor_table = 'general_vibration_params'
+            factor_n = 'is_general_vibration'
+        elif factor == 8:
+            factor_params = 'result_x, result_y, result_z'
+            factor_table = 'local_vibration_params'
+            factor_n = 'is_local_vibration'
+        else:
+            factor_params = 'noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl'
+            factor_table = "noise_params"
+            factor_n = 'is_noise'
+
         self.cursor.execute('SELECT customer_id, short_name, name, legal_address, actual_address, contract_number, '
                             'contract_date FROM customer WHERE short_name = %s',
                             (customer_short_name,))
@@ -249,27 +307,47 @@ class ConnectionDB:
         self.cursor.execute('SELECT department_id, name FROM customers_departments WHERE customer_id = %s',
                             (customer.customer_id, ))
         depts = self.cursor.fetchall()
+
         for dept in depts:
             customer.add_department(dept[0], dept[1])
             n = len(customer.departments) - 1
-            self.cursor.execute('SELECT department_working_area.working_area_id, name, temperature, atmo_pressure, '
-                                'humidity, noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl FROM '
-                                'department_working_area LEFT JOIN working_area_weather_condition ON '
-                                'department_working_area.working_area_id = '
-                                'working_area_weather_condition.working_area_id LEFT JOIN noise_params ON '
-                                'working_area_weather_condition.working_area_id = noise_params.working_area_id WHERE '
-                                'department_working_area.department_id = %s AND is_noise = true',
-                                (dept[0],))
+            sql_string = f'SELECT department_working_area.working_area_id, name, temperature, atmo_pressure, humidity, ' \
+                         f'{factor_params} FROM department_working_area LEFT JOIN working_area_weather_condition ON ' \
+                         f'department_working_area.working_area_id = working_area_weather_condition.working_area_id ' \
+                         f'LEFT JOIN {factor_table} ON working_area_weather_condition.working_area_id = ' \
+                         f'{factor_table}.working_area_id WHERE department_working_area.department_id = %s ' \
+                         f'AND {factor_n} = true'
+            self.cursor.execute(sql_string, (dept[0], ))
             areas = self.cursor.fetchall()
             for area in areas:
-                weather = dict(temperature=area[2], atmo_pressure=area[3], humidity=area[4])
-                params = dict(noise_source=area[5], nature_of_noise=area[6], sound_lvl=area[7], max_sound_lvl=area[8],
-                              eq_sound_lvl=area[9])
                 if area[2] and area[5]:
-                    if int(area[7]) > 80 or int(area[8]) > 110:
-                        hazard = True
+                    weather = dict(temperature=area[2], atmo_pressure=area[3], humidity=area[4])
+                    if factor == 4:
+                        params = dict(noise_source=area[5], nature_of_noise=area[6], sound_lvl=area[7],
+                                      max_sound_lvl=area[8], eq_sound_lvl=area[9])
+                        if int(area[7]) > 80 or int(area[8]) > 110:
+                            hazard = True
+                        else:
+                            hazard = False
+                    elif factor == 7:
+                        params = dict(result_x=area[5], result_y=area[6], result_z=area[7])
+                        if int(area[5]) > 112 or int(area[6]) > 112 or int(area[7]) > 115:
+                            hazard = True
+                        else:
+                            hazard = False
+                    elif factor == 8:
+                        params = dict(result_x=area[5], result_y=area[6], result_z=area[7])
+                        if int(area[5]) > 126 or int(area[6]) > 126 or int(area[7]) > 126:
+                            hazard = True
+                        else:
+                            hazard = False
                     else:
-                        hazard = False
+                        params = dict(noise_source=area[5], nature_of_noise=area[6], sound_lvl=area[7],
+                                      max_sound_lvl=area[8], eq_sound_lvl=area[9])
+                        if int(area[7]) > 80 or int(area[8]) > 110:
+                            hazard = True
+                        else:
+                            hazard = False
                 else:
                     hazard = False
                     weather = 0
@@ -304,7 +382,7 @@ class ConnectionDB:
 
     # Get factors from dictionary
     def get_all_factors(self):
-        self.cursor.execute('SELECT factor_id, factor FROM factor_dic WHERE factor_id != 0')
+        self.cursor.execute('SELECT factor_id, factor FROM factor_dic')
         factors = self.cursor.fetchall()
         factors_name_list = dict()
         for fact in factors:

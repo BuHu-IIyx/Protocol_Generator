@@ -1,0 +1,5 @@
+working_area_id;department;working_area;noise_source;nature_of_noise;sound_lvl;max_sound_lvl;eq_sound_lvl
+106;Цех №1;Мастер цеха
+104;Администрация;Директор
+105;Администрация;Инженер
+107;Производство;Токарь

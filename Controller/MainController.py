@@ -32,9 +32,9 @@ def get_methodologies_list(factor):
     return ini_db.get_methodologies_factor(factor)
 
 
-def get_customer(customer_short_name):
+def get_customer(customer_short_name, factor_name):
     ini_db = ConnectionDB()
-    customer = ini_db.get_customer(customer_short_name)
+    customer = ini_db.get_customer(customer_short_name, factor_name)
     return customer
 
 

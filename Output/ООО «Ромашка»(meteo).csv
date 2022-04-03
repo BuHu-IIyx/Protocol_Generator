@@ -1,0 +1,5 @@
+working_area_id;department;working_area;temperature;atmo_pressure;humidity
+106;Цех №1;Мастер цеха
+104;Администрация;Директор
+105;Администрация;Инженер
+107;Производство;Токарь

@@ -95,7 +95,7 @@ class MainWindow(tk.Frame):
         dep_iid = ''
         wa_iid = ''
         count = 1
-        customer = get_customer(customer_name)
+        customer = get_customer(customer_name, self.combo_factor.get())
         for dep in customer.departments:
             dep_iid = str(dep.department_id)
             self.tree.insert(parent='', index='end', iid=dep_iid, values=(dep.name,))
@@ -424,7 +424,7 @@ class AddWorkplaceWindow(tk.Toplevel):
         self.grab_set()
         self.focus_set()
 
-        tk.Label(self, text=self.customer_name + ' - ' + self.department_name, bd=5).\
+        tk.Label(self, text=self.customer_name + ' - ' + self.department_name, bd=5). \
             grid(column=0, row=0, columnspan=3, sticky=W)
 
         tk.Label(self, text="Название точки:", bd=5).grid(column=0, row=2, sticky=W)
@@ -439,11 +439,11 @@ class AddWorkplaceWindow(tk.Toplevel):
         self.check_loc_vib.set(0)
         self.check_gen_vib = tk.BooleanVar()
         self.check_gen_vib.set(0)
-        ttk.Checkbutton(self, text='Шум', variable=self.check_noise, onvalue=1, offvalue=0).\
+        ttk.Checkbutton(self, text='Шум', variable=self.check_noise, onvalue=1, offvalue=0). \
             grid(column=1, row=3, columnspan=2, sticky=W)
-        ttk.Checkbutton(self, text='Вибрация локальная', variable=self.check_loc_vib, onvalue=1, offvalue=0).\
+        ttk.Checkbutton(self, text='Вибрация локальная', variable=self.check_loc_vib, onvalue=1, offvalue=0). \
             grid(column=1, row=4, columnspan=2, sticky=W)
-        ttk.Checkbutton(self, text='Вибрация общая', variable=self.check_gen_vib, onvalue=1, offvalue=0).\
+        ttk.Checkbutton(self, text='Вибрация общая', variable=self.check_gen_vib, onvalue=1, offvalue=0). \
             grid(column=1, row=5, columnspan=2, sticky=W)
 
         tk.Label(self, text=" ", bd=5).grid(column=0, row=6, columnspan=3)
