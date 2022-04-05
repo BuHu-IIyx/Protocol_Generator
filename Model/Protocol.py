@@ -57,6 +57,7 @@ def generate_protocol_func(lab, customer, date_off, date_izm, fact_id):
     lab.fill_methodology(doc)
     doc.add_paragraph()
     customer.fill_weather_table(doc)
+    liter = ''
     if fact_id == 4:
         liter = 'Ш'
         customer.fill_noise_table(doc)

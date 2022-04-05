@@ -350,9 +350,9 @@ class AddLabWindow(tk.Toplevel):
             messagebox.showerror('Ошибка', 'Поле "E-mail" должно быть заполнено.')
             return 1
         else:
-            add_laboratory_click(self.entry_short_name.get(), self.entry_name, self.entry_name_lab, self.entry_logo,
-                                 self.entry_director, self.entry_address, self.entry_certificate_number,
-                                 self.entry_phone, self.entry_e_mail)
+            add_laboratory_click(self.entry_short_name.get(), self.entry_name.get(), self.entry_name_lab.get(),
+                                 self.entry_logo.get(), self.entry_director.get(), self.entry_address.get(),
+                                 self.entry_certificate_number.get(), self.entry_phone.get(), self.entry_e_mail.get())
             self.destroy()
 
     def init_window(self):
@@ -431,8 +431,9 @@ class AddCustomerWindow(tk.Toplevel):
             messagebox.showerror('Ошибка', 'Поле "Дата договора" должно быть заполнено.')
             return 1
         else:
-            add_customer_click(self.entry_short_name.get(), self.entry_name, self.entry_legal_address,
-                               self.entry_actual_address, self.entry_contract_number, self.entry_contract_date)
+            add_customer_click(self.entry_short_name.get(), self.entry_name.get(), self.entry_legal_address.get(),
+                               self.entry_actual_address.get(), self.entry_contract_number.get(),
+                               self.entry_contract_date.get())
             self.destroy()
 
     def init_window(self):
