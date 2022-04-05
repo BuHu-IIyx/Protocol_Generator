@@ -305,7 +305,7 @@ class ConnectionDB:
             customer.add_department(dept[0], dept[1])
             n = len(customer.departments) - 1
             sql_string_2 = f'SELECT department_working_area.working_area_id, name FROM department_working_area ' \
-                           f'WHERE {factor_n} department_working_area.department_id = %s'
+                           f'WHERE {factor_n} department_working_area.department_id = %s ORDER BY working_area_id'
             self.cursor.execute(sql_string_2, (dept[0],))
             areas = self.cursor.fetchall()
             for area in areas:

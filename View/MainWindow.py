@@ -77,7 +77,7 @@ class MainWindow(tk.Frame):
             wp_name = self.tree.item(self.tree.focus()).get('values')[0]
             wp_id = self.tree.focus()
             wp_id = wp_id.partition('.')[0]
-            AddWorkplaceWindow(department_id, department_name, customer_name, wp_name, int(wp_id))
+            AddWorkplaceWindow(department_id, department_name, customer_name, wp_name.split('. ')[1], int(wp_id))
         else:
             department_id = self.tree.focus()
             customer_name = self.tree.heading('customer').get('text')
