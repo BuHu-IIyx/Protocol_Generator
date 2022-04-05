@@ -58,10 +58,13 @@ def generate_protocol_func(lab, customer, date_off, date_izm, fact_id):
     doc.add_paragraph()
     customer.fill_weather_table(doc)
     if fact_id == 4:
+        liter = 'Ш'
         customer.fill_noise_table(doc)
     elif fact_id == 7:
         customer.fill_vibration_table(doc, 0)
+        liter = 'ВО'
     elif fact_id == 8:
+        liter = 'ВЛ'
         customer.fill_vibration_table(doc, 1)
 
     p = doc.add_paragraph()
@@ -96,7 +99,7 @@ def generate_protocol_func(lab, customer, date_off, date_izm, fact_id):
     run.italic = True
     run.font.size = Pt(8)
     add_page_number(table0.cell(0, 1).paragraphs[0])
-    file_name = f'Output/{customer.contract_number}.docx'
+    file_name = f'Output/{customer.contract_number}{liter}.docx'
     doc.save(file_name)
 
 

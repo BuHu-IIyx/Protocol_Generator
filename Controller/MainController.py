@@ -34,16 +34,25 @@ def get_methodologies_list(factor):
 
 def get_customer(customer_short_name, factor_name):
     ini_db = ConnectionDB()
-    customer = ini_db.get_customer(customer_short_name, factor_name)
+    fact_id = ini_db.get_factor_id(factor_name)
+    customer = ini_db.get_customer_tree(customer_short_name, fact_id)
     return customer
 
 
 def generate_protocol(lab, cust, fact, zamer, oformitel, measure, methodologies, date, date_izm):
     ini_db = ConnectionDB()
     fact_id = ini_db.get_factor_id(fact)
-    laboratory = ini_db.get_lab(lab, (zamer,), (oformitel,), (measure,), (methodologies,), fact_id)
+    laboratory = ini_db.get_lab(lab, (zamer,), (oformitel,), measure, methodologies, fact_id)
     customer = ini_db.get_customer(cust, fact_id)
-    generate_protocol_func(laboratory, customer, date, date_izm, fact_id)
+    if customer.is_factor_fill and customer.is_meteo_fill:
+        generate_protocol_func(laboratory, customer, date, date_izm, fact_id)
+        return 0
+    elif not customer.is_meteo_fill and not customer.is_factor_fill:
+        return 1
+    elif not customer.is_meteo_fill:
+        return 2
+    else:
+        return 3
 
 
 def add_laboratory_click(short_name, name, name_lab, logo, director, address, certificate_number, phone, e_mail):

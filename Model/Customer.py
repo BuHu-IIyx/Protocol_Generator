@@ -14,6 +14,8 @@ class Customer:
         self.legal_address = legal_address
         self.name = name
         self.departments = []
+        self.is_factor_fill = True
+        self.is_meteo_fill = True
 
     class Department:
         def __init__(self, department_id, name):
@@ -28,29 +30,6 @@ class Customer:
                 self.hazard = hazard
                 self.noise_params = noise_params
                 self.weather_conditions = weather_conditions
-
-            # class NoiseParameter:
-            #     def __init__(self, noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl):
-            #         self.noise_source = noise_source
-            #         self.nature_of_noise = nature_of_noise
-            #         self.sound_lvl = sound_lvl
-            #         self.max_sound_lvl = max_sound_lvl
-            #         self.eq_sound_lvl = eq_sound_lvl
-            #
-            # class WeatherCondition:
-            #     def __init__(self, temperature, atmo_pressure, humidity):
-            #         self.temperature = temperature
-            #         self.atmo_pressure = atmo_pressure
-            #         self.humidity = humidity
-            #
-            # def noise_parameter_ini(self, noise_source, nature_of_noise, sound_lvl, max_sound_lvl, eq_sound_lvl):
-            #     self.noise_params = self.NoiseParameter(noise_source, nature_of_noise, sound_lvl, max_sound_lvl,
-            #                                             eq_sound_lvl)
-            #     if sound_lvl > 80 or max_sound_lvl > 110:
-            #         self.hazard = True
-            #
-            # def weather_condition_ini(self, temperature, atmo_pressure, humidity):
-            #     self.weather_conditions = self.WeatherCondition(temperature, atmo_pressure, humidity)
 
             def get_noise_parameter(self):
                 return [self.number, self.name, self.noise_params.get('noise_source'),

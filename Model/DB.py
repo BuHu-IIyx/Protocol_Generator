@@ -130,18 +130,18 @@ class ConnectionDB:
     # Get all workplaces in customers departments
     def get_workplaces_in_customer(self, customer_id, factor_id=4):
         if factor_id == 4:
-            factor = 'is_noise'
+            factor = ' AND department_working_area.is_noise=true'
         elif factor_id == 7:
-            factor = 'is_general_vibration'
+            factor = ' AND department_working_area.is_general_vibration=true'
         elif factor_id == 8:
-            factor = 'is_local_vibration'
+            factor = ' AND department_working_area.is_local_vibration=true'
         else:
-            factor = 'is_chemestry'
+            factor = ''
         SQL_string = f'SELECT working_area_id, customers_departments.name, department_working_area.name ' \
                      f'FROM department_working_area INNER JOIN customers_departments ON ' \
                      f'department_working_area.department_id = customers_departments.department_id	' \
-                     f'WHERE customers_departments.customer_id=%s AND department_working_area.{factor}=true'
-        self.cursor.execute(SQL_string, (customer_id, ))
+                     f'WHERE customers_departments.customer_id=%s{factor}'
+        self.cursor.execute(SQL_string, (customer_id,))
         workplaces = self.cursor.fetchall()
         return workplaces
 
@@ -278,6 +278,41 @@ class ConnectionDB:
 
         return lab
 
+    def get_customer_tree(self, customer_short_name, factor):
+        if factor == 4:
+            factor_n = 'is_noise=true AND'
+        elif factor == 7:
+            factor_n = 'is_general_vibration=true AND'
+        elif factor == 8:
+            factor_n = 'is_local_vibration=true AND'
+        else:
+            factor_n = ''
+
+        self.cursor.execute('SELECT customer_id, short_name, name, legal_address, actual_address, contract_number, '
+                            'contract_date FROM customer WHERE short_name = %s',
+                            (customer_short_name,))
+        data = self.cursor.fetchone()
+        customer = Customer(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
+
+        sql_string = f'SELECT customers_departments.department_id, customers_departments.name ' \
+                     f'FROM customers_departments LEFT JOIN department_working_area ' \
+                     f'ON customers_departments.department_id=department_working_area.department_id ' \
+                     f'WHERE {factor_n} customer_id=%s GROUP BY customers_departments.department_id, ' \
+                     f'customers_departments.name, customer_id'
+        self.cursor.execute(sql_string, (customer.customer_id,))
+        depts = self.cursor.fetchall()
+        for dept in depts:
+            customer.add_department(dept[0], dept[1])
+            n = len(customer.departments) - 1
+            sql_string_2 = f'SELECT department_working_area.working_area_id, name FROM department_working_area ' \
+                           f'WHERE {factor_n} department_working_area.department_id = %s'
+            self.cursor.execute(sql_string_2, (dept[0],))
+            areas = self.cursor.fetchall()
+            for area in areas:
+                sql_string_3 = 'SELECT '
+                customer.departments[n].add_working_area(area[0], area[1], 0, 0, 0)
+        return customer
+
     # Customer fabric
     def get_customer(self, customer_short_name, factor):
         if factor == 4:
@@ -307,7 +342,7 @@ class ConnectionDB:
                      f'ON customers_departments.department_id=department_working_area.department_id ' \
                      f'WHERE {factor_n}=true AND customer_id=%s GROUP BY customers_departments.department_id, ' \
                      f'customers_departments.name, customer_id, perent_dep_id'
-        self.cursor.execute(SQL_string, (customer.customer_id, ))
+        self.cursor.execute(SQL_string, (customer.customer_id,))
         depts = self.cursor.fetchall()
 
         for dept in depts:
@@ -319,9 +354,16 @@ class ConnectionDB:
                          f'LEFT JOIN {factor_table} ON working_area_weather_condition.working_area_id = ' \
                          f'{factor_table}.working_area_id WHERE department_working_area.department_id = %s ' \
                          f'AND {factor_n} = true'
-            self.cursor.execute(sql_string, (dept[0], ))
+            self.cursor.execute(sql_string, (dept[0],))
             areas = self.cursor.fetchall()
             for area in areas:
+                hazard = False
+                weather = dict(temperature=0, atmo_pressure=0, humidity=0)
+                params = 0
+                if not area[2]:
+                    customer.is_meteo_fill = False
+                if not area[5]:
+                    customer.is_factor_fill = False
                 if area[2] and area[5]:
                     weather = dict(temperature=area[2], atmo_pressure=area[3], humidity=area[4])
                     if factor == 4:
@@ -329,31 +371,19 @@ class ConnectionDB:
                                       max_sound_lvl=area[8], eq_sound_lvl=area[9])
                         if int(area[7]) > 80 or int(area[8]) > 110:
                             hazard = True
-                        else:
-                            hazard = False
                     elif factor == 7:
                         params = dict(result_x=area[5], result_y=area[6], result_z=area[7])
                         if int(area[5]) > 112 or int(area[6]) > 112 or int(area[7]) > 115:
                             hazard = True
-                        else:
-                            hazard = False
                     elif factor == 8:
                         params = dict(result_x=area[5], result_y=area[6], result_z=area[7])
                         if int(area[5]) > 126 or int(area[6]) > 126 or int(area[7]) > 126:
                             hazard = True
-                        else:
-                            hazard = False
                     else:
                         params = dict(noise_source=area[5], nature_of_noise=area[6], sound_lvl=area[7],
                                       max_sound_lvl=area[8], eq_sound_lvl=area[9])
                         if int(area[7]) > 80 or int(area[8]) > 110:
                             hazard = True
-                        else:
-                            hazard = False
-                else:
-                    hazard = False
-                    weather = 0
-                    params = 0
                 customer.departments[n].add_working_area(area[0], area[1], hazard, weather, params)
         return customer
 
@@ -403,10 +433,10 @@ class ConnectionDB:
                             (customer_name,))
         customer_fact = self.cursor.fetchone()
         all_fact = self.get_all_factors()
-        result = []
+        result = [all_fact.get(0)]
         for i in range(0, 14):
             if customer_fact[i]:
-                result.append(all_fact.get(i+1))
+                result.append(all_fact.get(i + 1))
         return result
 
     # Get measure from DB on factor

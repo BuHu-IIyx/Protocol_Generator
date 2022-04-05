@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import CENTER, W, E, S
 from tkinter import ttk
+from tkinter import messagebox
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 from tkcalendar import Calendar, DateEntry
 
@@ -35,10 +36,13 @@ class MainWindow(tk.Frame):
         self.generate_tree(self.combo_cust.get())
 
     def create_button_click(self):
-        lab = self.combo_labs.get()
-        cust = self.combo_cust.get()
-        fact = self.combo_factor.get()
-        GenerateProtocolWindow(lab, cust, fact)
+        if self.combo_factor.current() != 0:
+            lab = self.combo_labs.get()
+            cust = self.combo_cust.get()
+            fact = self.combo_factor.get()
+            GenerateProtocolWindow(lab, cust, fact)
+        else:
+            messagebox.showerror('Ошибка', 'Выберите один фактор')
 
     @staticmethod
     def add_lab_button_click():
@@ -53,14 +57,17 @@ class MainWindow(tk.Frame):
         AddDepartmentWindow(customer_name)
 
     def add_workplace_button_click(self):
-        customer_name = self.tree.heading('customer').get('text')
-        if '.' in self.tree.focus():
-            department_id = self.tree.parent(self.tree.focus())
+        if self.tree.focus():
+            customer_name = self.tree.heading('customer').get('text')
+            if '.' in self.tree.focus():
+                department_id = self.tree.parent(self.tree.focus())
+            else:
+                department_id = self.tree.focus()
+            department_name = self.tree.item(department_id).get('values')[0]
+            AddWorkplaceWindow(department_id, department_name, customer_name)
         else:
-            department_id = self.tree.focus()
-
-        department_name = self.tree.item(department_id).get('values')[0]
-        AddWorkplaceWindow(department_id, department_name, customer_name)
+            messagebox.showerror('Ошибка', 'Выберите отдел')
+            return 1
 
     def edit_button_click(self):
         customer_name = self.tree.heading('customer').get('text')
@@ -81,24 +88,31 @@ class MainWindow(tk.Frame):
         file = asksaveasfilename(defaultextension=".csv", initialfile="report.csv")
         if file:
             export_workplaces_click(file, self.combo_cust.get(), self.combo_factor.get())
+            messagebox.showinfo('Импорт файла', f'Файл {file} успешно сохранен.')
 
     def import_button_click(self):
         file = askopenfilename()
         if file:
             import_workplaces_click(file, self.combo_factor.get())
-        print(file)
+            messagebox.showinfo('Импорт файла', f'Файл {file} успешно импортирован.')
 
     def import_wp_button_click(self):
         file = askopenfilename()
         if file:
             import_wp_click(file, self.combo_cust.get())
+            messagebox.showinfo('Импорт файла', f'Файл {file} успешно импортирован.')
 
     def update_treeview(self, customer_name):
         self.tree.heading('customer', text=customer_name, anchor=CENTER)
         dep_iid = ''
         wa_iid = ''
         count = 1
-        customer = get_customer(customer_name, self.combo_factor.get())
+        if self.combo_factor.get() == '':
+            factor = 'Все факторы'
+        else:
+            factor = self.combo_factor.get()
+
+        customer = get_customer(customer_name, factor)
         for dep in customer.departments:
             dep_iid = str(dep.department_id)
             self.tree.insert(parent='', index='end', iid=dep_iid, values=(dep.name,))
@@ -202,54 +216,104 @@ class GenerateProtocolWindow(tk.Toplevel):
         self.fact = fact
         self.init_window()
 
+    def add_measuring_button_click(self):
+        var = tk.StringVar()
+        var.set(get_measure_list(self.fact))
+        AddListboxCheckWindow(self.combo_measuring, 'методики', var)
+
+    def add_methodologies_button_click(self):
+        var = tk.StringVar()
+        var.set(get_methodologies_list(self.fact))
+        AddListboxCheckWindow(self.combo_methodologies, 'СИ', var)
+
     def create_button_click(self):
         zamer = self.combo_zam.get()
         oformitel = self.combo_oformit.get()
-        measure = self.combo_measuring.get()
-        methodologies = self.combo_methodologies.get()
+        measure = tuple(self.combo_measuring.get().split(' '))
+        methodologies = tuple(self.combo_methodologies.get().split(' '))
         date = self.date.get_date()
         date_izm = self.date_zamer.get_date()
-        generate_protocol(self.lab, self.cust, self.fact, zamer.split(': ')[0], oformitel.split(':')[0],
-                          measure.split(':')[0], methodologies.split(':')[0], date, date_izm)
-        self.destroy()
+        if zamer == '':
+            messagebox.showerror('Ошибка', 'Не выбран замерщик.')
+            return 1
+        elif oformitel == '':
+            messagebox.showerror('Ошибка', 'Не выбран оформитель.')
+            return 1
+        elif measure == '':
+            messagebox.showerror('Ошибка', 'Не выбраны приборы.')
+            return 1
+        elif methodologies == '':
+            messagebox.showerror('Ошибка', 'Не выбран методики.')
+            return 1
+        elif date == '':
+            messagebox.showerror('Ошибка', 'Не выбрана дата протокола.')
+            return 1
+        elif date_izm == '':
+            messagebox.showerror('Ошибка', 'Не выбрана дата замера.')
+            return 1
+
+        else:
+            result = generate_protocol(self.lab, self.cust, self.fact, zamer.split(': ')[0], oformitel.split(':')[0],
+                                       measure, methodologies, date, date_izm)
+            if result == 0:
+                messagebox.showinfo('Создание протокола', 'Протокол успешно создан.')
+            elif result == 1:
+                messagebox.showerror('Ошибка', 'Не заполнены данные об измерениях и метеообстановке, '
+                                               'заполните их и повторите попытку')
+            elif result == 2:
+                messagebox.showerror('Ошибка', 'Не заполнены данные о метеообстановке, '
+                                               'заполните их и повторите попытку')
+            elif result == 3:
+                messagebox.showerror('Ошибка', 'Не заполнены данные об измерениях, '
+                                               'заполните их и повторите попытку')
+            self.destroy()
 
     def init_window(self):
         self.title('Создание протокола')
-        self.geometry('300x200+400+300')
+        self.geometry('420x210+400+300')
         self.resizable(False, False)
 
         self.grab_set()
         self.focus_set()
 
         tk.Label(self, text="Выберите замерщика:", bd=5).grid(column=0, row=1)
-        self.combo_zam = ttk.Combobox(self, values=get_experts_list())
-        self.combo_zam.grid(column=1, row=1)
+        self.combo_zam = ttk.Combobox(self, values=get_experts_list(), width=40)
+        self.combo_zam.grid(column=1, row=1, columnspan=3)
 
         tk.Label(self, text="Выберите оформителя:", bd=5).grid(column=0, row=2)
-        self.combo_oformit = ttk.Combobox(self, values=get_experts_list())
-        self.combo_oformit.grid(column=1, row=2)
+        self.combo_oformit = ttk.Combobox(self, values=get_experts_list(), width=40)
+        self.combo_oformit.grid(column=1, row=2, columnspan=3)
 
         tk.Label(self, text="Выберите приборы:", bd=5).grid(column=0, row=3)
-        self.combo_measuring = ttk.Combobox(self, values=get_measure_list(self.fact))
-        self.combo_measuring.grid(column=1, row=3)
+
+        self.combo_measuring = ttk.Entry(self, width=38)
+        self.combo_measuring.grid(column=1, row=3, columnspan=2)
+
+        self.add_measuring_button = ttk.Button(self, text='+', width=3, command=self.add_measuring_button_click)
+        self.add_measuring_button.grid(column=3, row=3)
 
         tk.Label(self, text="Выберите методики:", bd=5).grid(column=0, row=4)
-        self.combo_methodologies = ttk.Combobox(self, values=get_methodologies_list(self.fact))
-        self.combo_methodologies.grid(column=1, row=4)
+
+        self.combo_methodologies = ttk.Entry(self, width=38)
+        self.combo_methodologies.grid(column=1, row=4, columnspan=2)
+
+        self.add_methodologies_button = ttk.Button(self, text='+', width=3,
+                                                   command=self.add_methodologies_button_click)
+        self.add_methodologies_button.grid(column=3, row=4)
 
         tk.Label(self, text="Дата протокола:", bd=5).grid(column=0, row=5)
-        self.date = DateEntry(self, width=20, foreground="white", bd=2)
-        self.date.grid(column=1, row=5)
+        self.date = DateEntry(self, width=40, foreground="white", bd=2)
+        self.date.grid(column=1, row=5, columnspan=3)
 
         tk.Label(self, text="Дата замера:", bd=5).grid(column=0, row=6)
-        self.date_zamer = DateEntry(self, width=20, foreground="white", bd=2)
-        self.date_zamer.grid(column=1, row=6)
+        self.date_zamer = DateEntry(self, width=40, foreground="white", bd=2)
+        self.date_zamer.grid(column=1, row=6, columnspan=3)
 
-        self.exit_button = ttk.Button(self, text='Отмена', width=20, command=self.destroy)
-        self.exit_button.grid(column=0, row=7)
+        self.exit_button = ttk.Button(self, text='Отмена', width=15, command=self.destroy)
+        self.exit_button.grid(column=1, row=7)
 
-        self.create_button = ttk.Button(self, text='Добавить', width=20, command=self.create_button_click)
-        self.create_button.grid(column=1, row=7)
+        self.create_button = ttk.Button(self, text='Добавить', width=15, command=self.create_button_click)
+        self.create_button.grid(column=2, row=7)
 
 
 class AddLabWindow(tk.Toplevel):
@@ -258,10 +322,38 @@ class AddLabWindow(tk.Toplevel):
         self.init_window()
 
     def add_button_click(self):
-        add_laboratory_click(self.entry_short_name.get(), self.entry_name, self.entry_name_lab, self.entry_logo,
-                             self.entry_director, self.entry_address, self.entry_certificate_number, self.entry_phone,
-                             self.entry_e_mail)
-        self.destroy()
+        if self.entry_short_name.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Сокращенное название" должно быть заполнено.')
+            return 1
+        elif self.entry_name.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Название полное" должно быть заполнено.')
+            return 1
+        elif self.entry_name_lab.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Название лаборатории" должно быть заполнено.')
+            return 1
+        elif self.entry_logo.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Логотип" должно быть заполнено.')
+            return 1
+        elif self.entry_director.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Руководитель" должно быть заполнено.')
+            return 1
+        elif self.entry_address.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Адрес" должно быть заполнено.')
+            return 1
+        elif self.entry_certificate_number.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Номер сертификата" должно быть заполнено.')
+            return 1
+        elif self.entry_phone.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Телефон" должно быть заполнено.')
+            return 1
+        elif self.entry_e_mail.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "E-mail" должно быть заполнено.')
+            return 1
+        else:
+            add_laboratory_click(self.entry_short_name.get(), self.entry_name, self.entry_name_lab, self.entry_logo,
+                                 self.entry_director, self.entry_address, self.entry_certificate_number,
+                                 self.entry_phone, self.entry_e_mail)
+            self.destroy()
 
     def init_window(self):
         self.title('Добавить лабораторию')
@@ -320,9 +412,28 @@ class AddCustomerWindow(tk.Toplevel):
         self.init_window()
 
     def add_button_click(self):
-        add_customer_click(self.entry_short_name.get(), self.entry_name, self.entry_legal_address,
-                           self.entry_actual_address, self.entry_contract_number, self.entry_contract_date)
-        self.destroy()
+        if self.entry_short_name.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Сокращенное название" должно быть заполнено.')
+            return 1
+        elif self.entry_name.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Название полное" должно быть заполнено.')
+            return 1
+        elif self.entry_legal_address.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Юридический адрес" должно быть заполнено.')
+            return 1
+        elif self.entry_actual_address.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Фактический адрес" должно быть заполнено.')
+            return 1
+        elif self.entry_contract_number.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Номер договора" должно быть заполнено.')
+            return 1
+        elif self.entry_contract_date.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Дата договора" должно быть заполнено.')
+            return 1
+        else:
+            add_customer_click(self.entry_short_name.get(), self.entry_name, self.entry_legal_address,
+                               self.entry_actual_address, self.entry_contract_number, self.entry_contract_date)
+            self.destroy()
 
     def init_window(self):
         self.title('Добавить заказчика')
@@ -372,11 +483,15 @@ class AddDepartmentWindow(tk.Toplevel):
         self.init_window()
 
     def add_button_click(self):
-        if self.department_id == 0:
-            add_department_click(self.entry_department_name.get(), self.customer_name)
+        if self.entry_department_name.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Название отдела" должно быть заполнено.')
+            return 1
         else:
-            edit_department_click(self.department_id, self.entry_department_name.get())
-        self.destroy()
+            if self.department_id == 0:
+                add_department_click(self.entry_department_name.get(), self.customer_name)
+            else:
+                edit_department_click(self.department_id, self.entry_department_name.get())
+            self.destroy()
 
     def init_window(self):
         self.title('Добавить отдел')
@@ -411,16 +526,23 @@ class AddWorkplaceWindow(tk.Toplevel):
         self.init_window()
 
     def add_button_click(self):
-        if self.wp_id != 0:
-            edit_workplace_click(self.wp_id, self.entry_wp_name.get(), self.check_noise.get(),
-                                 self.check_loc_vib.get(), self.check_gen_vib.get())
+        if self.entry_wp_name.get() == '':
+            messagebox.showerror('Ошибка', 'Поле "Название точки" должно быть заполнено.')
+            return 1
+        elif not self.check_noise.get() and not self.check_loc_vib.get() and not self.check_gen_vib.get():
+            messagebox.showerror('Ошибка', 'Необходимо выбрать как минимум один фактор.')
+            return 1
         else:
-            add_workplace_click(self.entry_wp_name.get(), self.department_id, self.check_noise.get(),
-                                self.check_loc_vib.get(), self.check_gen_vib.get())
-        self.destroy()
+            if self.wp_id != 0:
+                edit_workplace_click(self.wp_id, self.entry_wp_name.get(), self.check_noise.get(),
+                                     self.check_loc_vib.get(), self.check_gen_vib.get())
+            else:
+                add_workplace_click(self.entry_wp_name.get(), self.department_id, self.check_noise.get(),
+                                    self.check_loc_vib.get(), self.check_gen_vib.get())
+            self.destroy()
 
     def init_window(self):
-        self.title('Добавить отдел')
+        self.title('Добавить рабочую зону')
         self.geometry('400x200+400+300')
         self.resizable(False, False)
 
@@ -456,3 +578,45 @@ class AddWorkplaceWindow(tk.Toplevel):
 
         self.create_button = ttk.Button(self, text='Создать', width=20, command=self.add_button_click)
         self.create_button.grid(column=2, row=6)
+
+
+class AddListboxCheckWindow(tk.Toplevel):
+    def __init__(self, parent_window_box, name, var):
+        super().__init__()
+        self.name = name
+        self.var = var
+        self.result = []
+        self.parent_window_box = parent_window_box
+        self.init_window()
+
+    def add_button_click(self):
+        if not self.list_box.curselection():
+            messagebox.showerror('Ошибка', 'Выберите хотя бы один пункт.')
+            return 1
+        else:
+            items_list = self.list_box.curselection()
+            for item in items_list:
+                self.result.append(self.list_box.get(item).split(': ')[0])
+            self.parent_window_box.insert(0, self.result)
+            self.destroy()
+
+    def init_window(self):
+        self.title(f'Выберите {self.name}')
+        self.geometry('370x190+400+300')
+        self.resizable(False, False)
+
+        self.grab_set()
+        self.focus_set()
+
+        tk.Label(self, text=f'Выберите {self.name}', bd=5).grid(column=0, row=0)
+        self.list_box = tk.Listbox(self, listvariable=self.var, width=60, height=8, selectmode='extended')
+        self.list_box.grid(column=0, row=1, columnspan=2)
+
+        self.exit_button = ttk.Button(self, text='Отмена', width=20, command=self.destroy)
+        self.exit_button.grid(column=0, row=2)
+
+        self.create_button = ttk.Button(self, text='Добавить', width=20, command=self.add_button_click)
+        self.create_button.grid(column=1, row=2)
+
+    def __del__(self):
+        return self.result
